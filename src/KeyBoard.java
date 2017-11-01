@@ -11,10 +11,18 @@ public class KeyBoard extends Device implements Runnable
 	
 	final Object lock = new Object();
 	volatile Thread thread;
+	Caller caller = null;
+	volatile String buffer = null;
 	
-	public KeyBoard() {
+	public KeyBoard(Caller clr) {
 		state = STATE_STANDBY;
 		thread = null;
+		caller = clr;
+	}
+	
+	public void setInput(String buf)
+	{
+		buffer = buf;
 	}
 	
 	public void sendCommand(int cmd) {
@@ -22,6 +30,7 @@ public class KeyBoard extends Device implements Runnable
 			if (thread != null) {
 				return;
 			}
+			buffer = null;
 			if (cmd == 1) {
 				thread = new Thread(this);
 				thread.start();
@@ -31,15 +40,39 @@ public class KeyBoard extends Device implements Runnable
 		}
 	}
 	
+	public String getBuffer()
+	{
+		return buffer;
+	}
+	
 	public void run()
 	{
+		buffer = null;
+		caller.call();
+		while (buffer == null)
+		{
+			try
+			{
+				Thread.sleep(300);
+			}
+			catch (InterruptedException _)
+			{
+				break;
+			}
+		}
+		/*
 		try {
+			int pos = 0;
 			for(;;) {
 				if (state == STATE_PREPARE) {
-					// data = System.in.read();
-					if (data < 0 || data == LINEEND) {
+					if (pos >= buffer.length())
+					{
 						break;
-					} else if (LINESEP.indexOf(data) < 0) {
+					}
+					else
+					{
+						data = buffer.charAt(pos);
+						pos++;
 						state = STATE_READY;
 					}
 				}
@@ -49,6 +82,8 @@ public class KeyBoard extends Device implements Runnable
 		} catch (InterruptedException _) {
 			state = STATE_ERROR;
 		}
+		buffer = null;
+		*/
 		thread = null;
 	}
 }
