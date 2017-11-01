@@ -1,0 +1,8 @@
+/classes
+/lib
+/tmpclasses
+/tmplib
+*.jar
+*.class
+*.properties
+*.pro
