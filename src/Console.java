@@ -22,14 +22,10 @@ public class Console extends Device implements Runnable
 		defaultColor = dc;
 	}
 	
-	public void invokeUpdate(Graphics g)
+	public boolean isUpdated()
 	{
-		if (updated)
-		{
-			paint(g);
-		}
-	}
-	
+		return updated;
+	}	
 	
 	public void print(String msg)
 	{

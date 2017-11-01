@@ -95,7 +95,12 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 				try
 				{
 					comet2.step();
-					console.invokeUpdate(g);
+					if (console.isUpdated() && !step)
+					{
+						clear(g);
+						console.paint(g);
+						flushGraphics();
+					}
 					if (step)
 					{
 						String[] status = comet2.getStatus();

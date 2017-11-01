@@ -254,11 +254,11 @@ public final class Compiler
 								}
 								else if ("DS".equals(tk))
 								{
-									dc_count = 0;
 									state = STATE_DS_SIZE;
 								}
 								else if ("DC".equals(tk))
 								{
+									dc_count = 0;
 									state = STATE_DC_VALUES;
 								}
 								else if ("OUT".equals(tk) || "IN".equals(tk))

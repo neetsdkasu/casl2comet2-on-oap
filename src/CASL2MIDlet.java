@@ -111,6 +111,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			String src = codingBox.getString();
 			fileMgr.saveSrc(src);
 		}
+		fileMgr.close();
 	}
 	
 	protected void destroyApp(boolean unconditional)

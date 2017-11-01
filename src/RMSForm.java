@@ -50,6 +50,23 @@ public class RMSForm extends Form
 		info.setText(null);
 	}
 	
+	public void close()
+	{
+		if (curRS == null)
+		{
+			return;
+		}
+		try
+		{
+			curRS.closeRecordStore();
+		}
+		catch (RecordStoreException _)
+		{
+			// no code
+		}
+		curRS = null;
+	}
+	
 	public String getFileName()
 	{
 		return fileName;
