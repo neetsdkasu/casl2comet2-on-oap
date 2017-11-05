@@ -725,6 +725,10 @@ public class CometII
 								mOut.writeShort(b & 0xFF);
 							}
 							len = buf.length();
+							if (stdout != null)
+							{
+								stdout.putBuffer("? " + buf);
+							}
 							break;
 						}
 						try

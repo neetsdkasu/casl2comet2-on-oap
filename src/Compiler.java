@@ -213,6 +213,7 @@ public final class Compiler
 					case STATE_HEAD:
 						if (isValidLabel(tk))
 						{
+							// System.out.println("LABELING: " + tk + " -> " + Integer.toString(mempos, 16)); // debug
 							labels.put(tk, new Integer(mempos));
 							state = STATE_CMD;
 						}
@@ -492,10 +493,10 @@ public final class Compiler
 							{
 							case STATE_OUT_1:
 							case STATE_IN_1:
-								cur.arg3 = 1;
+								cur.arg1 = 1;
 								break;
 							default:
-								cur.arg3 = 2;
+								cur.arg1 = 2;
 								break;
 							}
 							cur.pos = mempos;
@@ -698,6 +699,7 @@ public final class Compiler
 				Integer i = (Integer)literals.get(lit);
 				return errmsg(i.intValue(), lit);
 			}
+			// System.out.println("LITERAL: " + lit + " POS:" + Integer.toString(mempos, 16)); // debug
 			int ch = lit.charAt(1);
 			switch (ch)
 			{
@@ -772,6 +774,7 @@ public final class Compiler
 				break;
 			}
 		}
+		// System.out.println("cmdList bindings"); // debug
 		for (Enumeration en = cmdList.elements(); en.hasMoreElements(); )
 		{
 			Comet2Command cc = (Comet2Command)en.nextElement();
@@ -779,14 +782,18 @@ public final class Compiler
 			if (cc.cmd < 0)
 			{
 				mem.setPos(cc.pos << 1);
-				mem.writeShort(adr.intValue() << 1);
+				mem.writeShort(adr.intValue());
 			}
 			else
 			{
 				int p = cc.pos + 1;
 				mem.setPos(p << 1);
-				mem.writeShort(adr.intValue() << 1);
+				mem.writeShort(adr.intValue());
 			}
+			/* vvv debug vvv * /
+			System.out.println("code: " + Integer.toString(cc.getCode() & 0xFFFF, 16) + " pos: " + Integer.toString(cc.pos, 16)
+				+ " bind: " + cc.label + " -> " + Integer.toString(adr.intValue(), 16));
+			/* ^^^ debug ^^^ */
 		}
 		/*
 		System.out.println("cmdList: " + cmdList.size());

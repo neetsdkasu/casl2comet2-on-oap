@@ -217,7 +217,6 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		else if (cmd == okCommand)
 		{
 			String value = inputBox.getString();
-			mainDisp.requestInfo(value, 0xFFFFFF);
 			keyBoard.setInput(value);
 			Display.getDisplay(this).setCurrent(mainDisp);
 		}
