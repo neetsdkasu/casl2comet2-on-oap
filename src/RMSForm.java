@@ -182,24 +182,31 @@ public class RMSForm extends Form
 		{
 			try
 			{
-				if (rsName.equals(curRS.getName()))
+				if (rsName.equals(curRS.getName()) == false)
 				{
-					return null;
+					curRS.closeRecordStore();
+					curRS = null;
 				}
-				curRS.closeRecordStore();
 			}
 			catch (RecordStoreException  _)
 			{
-				return null;
-			}
-			finally
-			{
+				if (curRS != null)
+				try
+				{
+					curRS.closeRecordStore();
+				}
+				catch (RecordStoreException __)
+				{
+				}
 				curRS = null;
+				return null;
 			}
 		}
 		try
 		{
-			curRS = RecordStore.openRecordStore(rsName, true);
+			if (curRS == null) {
+				curRS = RecordStore.openRecordStore(rsName, true);
+			}
 			if (curRS.getNumRecords() == 0)
 			{
 				return "";
