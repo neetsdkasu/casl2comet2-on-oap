@@ -190,6 +190,8 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		}
 		else if (cmd == closeCommand)
 		{
+			String src = codingBox.getString();
+			fileMgr.saveSrc(src);
 			Display.getDisplay(this).setCurrent(mainDisp);
 		}
 		else if (cmd == cancelCommand)
