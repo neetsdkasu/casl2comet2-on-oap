@@ -231,6 +231,10 @@ public class RMSForm extends Form
 				return "";
 			}
 			byte[] buf = curRS.getRecord(1);
+			if (buf == null)
+			{
+				return "";
+			}
 			return new String(buf);
 		}
 		catch (RecordStoreException _)
