@@ -13,6 +13,7 @@ public class RMSForm extends Form
 	ChoiceGroup fileList;
 	RecordStore curRS = null;
 	String fileName = null;
+	boolean isNewFile = false;
 	
 	public RMSForm()
 	{
@@ -113,6 +114,7 @@ public class RMSForm extends Form
 				}
 			}
 			fileName = file;
+			isNewFile = true;
 		}
 		else
 		{
@@ -128,6 +130,7 @@ public class RMSForm extends Form
 				return false;
 			}
 			fileName = fileList.getString(idx);
+			isNewFile = false;
 		}
 		info.setText(null);
 		return true;
@@ -206,6 +209,22 @@ public class RMSForm extends Form
 		{
 			if (curRS == null) {
 				curRS = RecordStore.openRecordStore(rsName, true);
+				if (isNewFile)
+				{
+					for (int i = 0; i < fileList.size(); i++)
+					{
+						if (fileName.equals(fileList.getString(i)))
+						{
+							isNewFile = false;
+							break;
+						}
+					}
+					if (isNewFile)
+					{
+						fileList.append(fileName, null);
+						isNewFile = false;
+					}
+				}
 			}
 			if (curRS.getNumRecords() == 0)
 			{
