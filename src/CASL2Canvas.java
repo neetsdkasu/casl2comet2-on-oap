@@ -83,12 +83,12 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 						console.paint(g);
 						flushGraphics();
 						state.compareAndSet(nowState, STATE_IDLE);
-						System.out.println(res);
+						// System.out.println(res);
 					}
 				}
 				catch (Exception ex)
 				{
-					ex.printStackTrace();
+					CASL2MIDlet.lastError = ex.toString();
 					state.compareAndSet(nowState, STATE_IDLE);
 				}
 				break;

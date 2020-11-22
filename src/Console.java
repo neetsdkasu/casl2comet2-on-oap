@@ -109,8 +109,8 @@ public class Console extends Device implements Runnable
 		} catch (InterruptedException _) {
 			state = STATE_ERROR;
 		}
-		System.out.println("buflen: " + buflen);
-		System.out.println("reallen: " + buf.length());
+		// System.out.println("buflen: " + buflen);
+		// System.out.println("reallen: " + buf.length());
 		print(buf.toString());
 		thread = null;
 	}

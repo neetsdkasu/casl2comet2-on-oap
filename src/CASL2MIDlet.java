@@ -1,5 +1,7 @@
 // CASL2MIDlet
 
+import javax.microedition.lcdui.Alert;
+import javax.microedition.lcdui.AlertType;
 import javax.microedition.lcdui.Command;
 import javax.microedition.lcdui.CommandListener;
 import javax.microedition.lcdui.Display;
@@ -9,6 +11,8 @@ import javax.microedition.midlet.MIDletStateChangeException;
 
 public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 {
+    public static String lastError = "nothing";
+    
 	private Thread mainloop = null;
 	
 	private CASL2Canvas mainDisp  = null;
@@ -28,6 +32,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 	private Command selectCommand   = null;
 	private Command okCommand       = null;
 	private Command breakCommand    = null;
+	private Command errorCommand    = null;
 	
 	private boolean existFile = false;
 	
@@ -62,7 +67,10 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		codingCommand = new Command("CODING", Command.SCREEN, 5);
 		mainDisp.addCommand(codingCommand);
 
-		helpCommand = new Command("HELP", Command.SCREEN, 6);
+		errorCommand = new Command("ERROR", Command.SCREEN, 6);
+		mainDisp.addCommand(errorCommand);
+		
+		helpCommand = new Command("HELP", Command.SCREEN, 7);
 		mainDisp.addCommand(helpCommand);
 		
 		closeCommand = new Command("CLOSE", Command.SCREEN, 1);
@@ -236,5 +244,11 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			Display.getDisplay(this).setCurrent(mainDisp);
 			mainDisp.requestStop();
 		}
+        else if (cmd == errorCommand)
+        {
+            Alert alert = new Alert("LastError", lastError, null, AlertType.INFO);
+            alert.setTimeout(10000);
+            Display.getDisplay(this).setCurrent(alert);
+        }
 	}
 }

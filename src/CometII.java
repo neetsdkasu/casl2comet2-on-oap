@@ -828,7 +828,7 @@ public class CometII
 						}
 						else // if (st == Device.STATE_STANDBY || st == Device.STATE_ERROR)
 						{
-							System.out.println("piyo" + st + " siz:" + bsize + " len: " + len);
+							// System.out.println("piyo" + st + " siz:" + bsize + " len: " + len);
 							break;
 						}
 					}

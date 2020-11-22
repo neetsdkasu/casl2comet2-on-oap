@@ -775,10 +775,16 @@ public final class Compiler
 			}
 		}
 		// System.out.println("cmdList bindings"); // debug
-		for (Enumeration en = cmdList.elements(); en.hasMoreElements(); )
+		int num = 0;
+        for (Enumeration en = cmdList.elements(); en.hasMoreElements(); )
 		{
+            num++;
 			Comet2Command cc = (Comet2Command)en.nextElement();
 			Integer adr = (Integer)labels.get(cc.label);
+            if (adr == null)
+            {
+                return errmsg(num, "not found label ! " + cc.label);
+            }
 			if (cc.cmd < 0)
 			{
 				mem.setPos(cc.pos << 1);
@@ -790,17 +796,17 @@ public final class Compiler
 				mem.setPos(p << 1);
 				mem.writeShort(adr.intValue());
 			}
-			/* vvv debug vvv * /
-			System.out.println("code: " + Integer.toString(cc.getCode() & 0xFFFF, 16) + " pos: " + Integer.toString(cc.pos, 16)
+			/* vvv debug vvv *-/
+			// System.out.println("code: " + Integer.toString(cc.getCode() & 0xFFFF, 16) + " pos: " + Integer.toString(cc.pos, 16)
 				+ " bind: " + cc.label + " -> " + Integer.toString(adr.intValue(), 16));
 			/* ^^^ debug ^^^ */
 		}
 		/*
-		System.out.println("cmdList: " + cmdList.size());
-		System.out.println("labels: " + labels.size());
-		System.out.println("literals: " + literals.size());
-		System.out.println("mempos: " + mempos);
-		System.out.println("pos: " +  mem.getOutPos());
+		// System.out.println("cmdList: " + cmdList.size());
+		// System.out.println("labels: " + labels.size());
+		// System.out.println("literals: " + literals.size());
+		// System.out.println("mempos: " + mempos);
+		// System.out.println("pos: " +  mem.getOutPos());
 		*/
 		return null;
 	}

@@ -159,8 +159,9 @@ public class RMSForm extends Form
 			}
 			return true;
 		}
-		catch (RecordStoreException _)
+		catch (RecordStoreException ex)
 		{
+            CASL2MIDlet.lastError = ex.toString();
 			try
 			{
 				curRS.closeRecordStore();
@@ -191,9 +192,10 @@ public class RMSForm extends Form
 					curRS = null;
 				}
 			}
-			catch (RecordStoreException  _)
+			catch (RecordStoreException  ex)
 			{
-				if (curRS != null)
+				CASL2MIDlet.lastError = ex.toString();
+                if (curRS != null)
 				try
 				{
 					curRS.closeRecordStore();
@@ -237,9 +239,10 @@ public class RMSForm extends Form
 			}
 			return new String(buf);
 		}
-		catch (RecordStoreException _)
+		catch (RecordStoreException ex)
 		{
-			if (curRS != null)
+			CASL2MIDlet.lastError = ex.toString();
+            if (curRS != null)
 			{
 				try
 				{
