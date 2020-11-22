@@ -485,7 +485,7 @@ public final class Compiler
 					case STATE_OUT_1:
 					case STATE_IN_1:
 						// label
-						if (ch == '=' || isValidLabel(tk))
+						if (isValidLabel(tk))
 						{
 							cur.clear();
 							Comet2Command.validCommandName("LAD", cur);
@@ -503,13 +503,6 @@ public final class Compiler
 							cur.label = tk;
 							mem.writeShort(cur.getCode());
 							mem.writeShort(0);
-							if (ch == '=')
-							{
-								if (!literals.containsKey(tk))
-								{
-									literals.put(tk, new Integer(lines));
-								}
-							}
 							cmdList.addElement(cur);
 							cur = new Comet2Command();
 							mempos += 2;

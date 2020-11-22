@@ -1,0 +1,48 @@
+comment: ;
+label-len: 1..8 (up-case:[up-case|num])
+dec: -32768..32767
+hex: #0000..#FFFF
+str: 'ab cd''efg'
+lit-adr: =123, =#123
+r:GR0-GR7
+x:GR1-GR7
+adr: label,dec,hex,lit-adr
+LD r1,r2 | r,adr[,x] FR&OF=0
+ST r,adr[,x]
+LAD r,adr[,x]
+ADDA r1,r2 | r,adr[,x] FR
+ADDL r1,r2 | r,adr[,x] FR
+SUBA r1,r2 | r,adr[,x] FR
+SUBL r1,r2 | r,adr[,x] FR
+AND r1,r2 | r,adr[,x] FR&OF=0
+OR r1,r2 | r,adr[,x] FR&OF=0
+XOR r1,r2 | r,adr[,x] FR&OF=0
+CPA r1,r2 | r,adr[,x] FR&OF=0 
+CPL r1,r2 | r,adr[,x] FR&OF=0
+ (r1)>(r2) SF=0&ZF=0
+ (r1)=(r2) SF=0&ZF=1
+ (r1)<(r2) SF=1&ZF=0
+SLA r,adr[,x] FR&OF=0
+SRA r,adr[,x] FR&OF=0
+SLL r,adr[,x] FR&OF=0
+SRL r,adr[,x] FR&OF=0
+JPL adr[,x] (SF=0&ZF=0)
+JMI adr[,x] (SF=1)
+JNZ adr[,x] (ZF=0)
+JZE adr[,x] (ZF=1)
+JOV adr[,x] (OF=1)
+JUMP adr[,x]
+PUSH adr[,x]
+POP r
+CALL adr[,x]
+RET
+SVC adr[,x]
+NOP
+START [label]
+END
+DS size(dec)
+DC value[,value]
+IN buf-label,len-label (buf-size=256)
+OUT buf-label,len-label
+RPUSH (GR1..GR7)
+RPOP (GR7..GR1)

@@ -39,6 +39,11 @@ public abstract class Device
 	{
 		// no code
 	}
+    
+    public boolean isEOF()
+    {
+        return false;
+    }
 
 	public abstract void sendCommand(int cmd);
 }

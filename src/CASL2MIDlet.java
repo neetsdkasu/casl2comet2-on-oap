@@ -1,11 +1,14 @@
 // CASL2MIDlet
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import javax.microedition.lcdui.Alert;
 import javax.microedition.lcdui.AlertType;
 import javax.microedition.lcdui.Command;
 import javax.microedition.lcdui.CommandListener;
 import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Displayable;
+import javax.microedition.lcdui.Form;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.midlet.MIDletStateChangeException;
 
@@ -19,6 +22,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 	private CodingBox   codingBox = null;
 	private RMSForm     fileMgr   = null;
 	private InputBox    inputBox  = null;
+    private Form        helpView  = null;
 	
 	private Command exitCommand     = null;
 	private Command helpCommand     = null;
@@ -33,6 +37,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 	private Command okCommand       = null;
 	private Command breakCommand    = null;
 	private Command errorCommand    = null;
+	private Command closeHelpCommand= null;
 	
 	private boolean existFile = false;
 	
@@ -48,6 +53,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		codingBox = new CodingBox();
 		fileMgr   = new RMSForm();
 		inputBox  = new InputBox();
+        helpView  = new Form("Help");
 		
 		exitCommand = new Command("EXIT", Command.EXIT, 1);		
 		mainDisp.addCommand(exitCommand);
@@ -88,11 +94,17 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		breakCommand = new Command("BREAK", Command.SCREEN, 2);
 		inputBox.addCommand(breakCommand);
 
+		closeHelpCommand = new Command("CLOSE", Command.SCREEN, 1);
+		helpView.addCommand(closeHelpCommand);
+
 		mainDisp.setCommandListener(this);
 		codingBox.setCommandListener(this);
 		fileMgr.setCommandListener(this);
 		inputBox.setCommandListener(this);
+        helpView.setCommandListener(this);
 		
+        loadHelpText();
+        
 		Display.getDisplay(this).setCurrent(mainDisp);
 	}
 	
@@ -166,7 +178,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			}
 			else
 			{
-				mainDisp.requestInfo("select file", 0xFF00FF);
+				mainDisp.requestInfo("must select file", 0xFF00FF);
 			}
 		}
 		else if (cmd == stepCommand)
@@ -247,8 +259,58 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
         else if (cmd == errorCommand)
         {
             Alert alert = new Alert("LastError", lastError, null, AlertType.INFO);
-            alert.setTimeout(10000);
+            alert.setTimeout(8000);
             Display.getDisplay(this).setCurrent(alert);
         }
+        else if (cmd == helpCommand)
+        {
+			Display.getDisplay(this).setCurrent(helpView);
+        }
+        else if (cmd == closeHelpCommand)
+        {
+			Display.getDisplay(this).setCurrent(mainDisp);
+        }
 	}
+    
+    private boolean loadHelpText()
+    {
+        InputStream is = getClass().getResourceAsStream("/help.txt");
+        if (is == null)
+        {
+            lastError = "not found resource";
+            return false;
+        }
+        try 
+        {
+            InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+            StringBuffer sb = new StringBuffer();
+            for (;;)
+            {
+                int ch = isr.read();
+                if (ch < 0)
+                {
+                    break;
+                }
+                sb.append((char)ch);
+            }
+            helpView.append(sb.toString());
+            return true;
+        }
+        catch (Exception ex)
+        {
+            lastError = ex.toString();
+            return false;
+        }
+        finally
+        {
+            try
+            {
+                is.close();
+            }
+            catch (Exception _)
+            {
+                // no code
+            }
+        }
+    }
 }

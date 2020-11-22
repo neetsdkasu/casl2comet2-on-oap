@@ -716,15 +716,20 @@ public class CometII
 					memory.setPos(GR1 << 1);
 					for (;;)
 					{
+                        if (stdin.isEOF())
+                        {
+                            len = -1;
+                            break;
+                        }
 						String buf = stdin.getBuffer();
 						if (buf != null)
 						{
-							for (int k = 0; k < buf.length(); k++)
+							len = Math.min(256, buf.length());
+							for (int k = 0; k < len; k++)
 							{
 								int b = buf.charAt(k);
 								mOut.writeShort(b & 0xFF);
 							}
-							len = buf.length();
 							if (stdout != null)
 							{
 								stdout.putBuffer("? " + buf);
