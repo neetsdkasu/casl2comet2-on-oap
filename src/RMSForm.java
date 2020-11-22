@@ -138,12 +138,38 @@ public class RMSForm extends Form
 	
 	public boolean saveSrc(String src)
 	{
-		if (src == null)
+		if (curRS == null)
 		{
 			return false;
 		}
-		if (curRS == null)
+		if (src == null || src.length() == 0)
 		{
+            String rsName = "casl2." + fileName;
+            try
+            {
+                curRS.closeRecordStore();
+            }
+            catch (RecordStoreException __)
+            {
+                // no code
+            }
+            curRS = null;
+            try
+            {
+                RecordStore.deleteRecordStore(rsName);
+            }    
+			catch (RecordStoreException __)
+			{
+				// no code
+			}
+            for (int i = 0; i < fileList.size(); i++)
+            {
+                if (fileName.equals(fileList.getString(i)))
+                {
+                    fileList.delete(i);
+                    break;
+                }
+            }
 			return false;
 		}
 		try
