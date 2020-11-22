@@ -27,6 +27,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 	private Command cancelCommand   = null;
 	private Command selectCommand   = null;
 	private Command okCommand       = null;
+	private Command breakCommand    = null;
 	
 	private boolean existFile = false;
 	
@@ -75,6 +76,9 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		
 		okCommand = new Command("OK", Command.SCREEN, 1);
 		inputBox.addCommand(okCommand);
+
+		breakCommand = new Command("BREAK", Command.SCREEN, 2);
+		inputBox.addCommand(breakCommand);
 
 		mainDisp.setCommandListener(this);
 		codingBox.setCommandListener(this);
@@ -224,6 +228,13 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			String value = inputBox.getString();
 			keyBoard.setInput(value);
 			Display.getDisplay(this).setCurrent(mainDisp);
+		}
+		else if (cmd == breakCommand)
+		{
+			String value = inputBox.getString();
+			keyBoard.setInput(value);
+			Display.getDisplay(this).setCurrent(mainDisp);
+			mainDisp.requestStop();
 		}
 	}
 }
