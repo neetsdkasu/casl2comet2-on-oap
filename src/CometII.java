@@ -710,17 +710,18 @@ public class CometII
 				}
 				else
 				{
+					// simulate OS program
 					int len = 0;
 					stdin.setState(Device.STATE_PREPARE);
 					stdin.sendCommand(1);
 					memory.setPos(GR1 << 1);
 					for (;;)
 					{
-                        if (stdin.isEOF())
-                        {
-                            len = -1;
-                            break;
-                        }
+						if (stdin.isEOF())
+						{
+							len = -1;
+							break;
+						}
 						String buf = stdin.getBuffer();
 						if (buf != null)
 						{
@@ -788,6 +789,7 @@ public class CometII
 				}
 				else
 				{
+					// simulate OS program
 					memory.setPos(GR2 << 1);
 					int len = mIn.readShort();
 					int bsize = 0;

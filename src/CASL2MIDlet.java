@@ -14,15 +14,15 @@ import javax.microedition.midlet.MIDletStateChangeException;
 
 public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 {
-    public static String lastError = "nothing";
-    
+	public static String lastError = "nothing";
+	
 	private Thread mainloop = null;
 	
 	private CASL2Canvas mainDisp  = null;
 	private CodingBox   codingBox = null;
 	private RMSForm     fileMgr   = null;
 	private InputBox    inputBox  = null;
-    private Form        helpView  = null;
+	private Form        helpView  = null;
 	
 	private Command exitCommand     = null;
 	private Command helpCommand     = null;
@@ -53,7 +53,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		codingBox = new CodingBox();
 		fileMgr   = new RMSForm();
 		inputBox  = new InputBox();
-        helpView  = new Form("Help");
+		helpView  = new Form("Help");
 		
 		exitCommand = new Command("EXIT", Command.EXIT, 1);		
 		mainDisp.addCommand(exitCommand);
@@ -101,10 +101,10 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		codingBox.setCommandListener(this);
 		fileMgr.setCommandListener(this);
 		inputBox.setCommandListener(this);
-        helpView.setCommandListener(this);
+		helpView.setCommandListener(this);
 		
-        loadHelpText();
-        
+		loadHelpText();
+		
 		Display.getDisplay(this).setCurrent(mainDisp);
 	}
 	
@@ -174,7 +174,8 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			if (existFile)
 			{
 				String src = codingBox.getString();
-				mainDisp.requestRun(src, false);
+				String file = fileMgr.getFileName();
+				mainDisp.requestRun(file, src, false);
 			}
 			else
 			{
@@ -186,7 +187,8 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			if (existFile)
 			{
 				String src = codingBox.getString();
-				mainDisp.requestRun(src, true);
+				String file = fileMgr.getFileName();
+				mainDisp.requestRun(file, src, true);
 			}
 			else
 			{
@@ -256,61 +258,61 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			Display.getDisplay(this).setCurrent(mainDisp);
 			mainDisp.requestStop();
 		}
-        else if (cmd == errorCommand)
-        {
-            Alert alert = new Alert("LastError", lastError, null, AlertType.INFO);
-            alert.setTimeout(8000);
-            Display.getDisplay(this).setCurrent(alert);
-        }
-        else if (cmd == helpCommand)
-        {
+		else if (cmd == errorCommand)
+		{
+			Alert alert = new Alert("LastError", lastError, null, AlertType.INFO);
+			alert.setTimeout(8000);
+			Display.getDisplay(this).setCurrent(alert);
+		}
+		else if (cmd == helpCommand)
+		{
 			Display.getDisplay(this).setCurrent(helpView);
-        }
-        else if (cmd == closeHelpCommand)
-        {
+		}
+		else if (cmd == closeHelpCommand)
+		{
 			Display.getDisplay(this).setCurrent(mainDisp);
-        }
+		}
 	}
-    
-    private boolean loadHelpText()
-    {
-        InputStream is = getClass().getResourceAsStream("/help.txt");
-        if (is == null)
-        {
-            lastError = "not found resource";
-            return false;
-        }
-        try 
-        {
-            InputStreamReader isr = new InputStreamReader(is, "UTF-8");
-            StringBuffer sb = new StringBuffer();
-            for (;;)
-            {
-                int ch = isr.read();
-                if (ch < 0)
-                {
-                    break;
-                }
-                sb.append((char)ch);
-            }
-            helpView.append(sb.toString());
-            return true;
-        }
-        catch (Exception ex)
-        {
-            lastError = ex.toString();
-            return false;
-        }
-        finally
-        {
-            try
-            {
-                is.close();
-            }
-            catch (Exception _)
-            {
-                // no code
-            }
-        }
-    }
+	
+	private boolean loadHelpText()
+	{
+		InputStream is = getClass().getResourceAsStream("/help.txt");
+		if (is == null)
+		{
+			lastError = "not found resource";
+			return false;
+		}
+		try 
+		{
+			InputStreamReader isr = new InputStreamReader(is, "UTF-8");
+			StringBuffer sb = new StringBuffer();
+			for (;;)
+			{
+				int ch = isr.read();
+				if (ch < 0)
+				{
+					break;
+				}
+				sb.append((char)ch);
+			}
+			helpView.append(sb.toString());
+			return true;
+		}
+		catch (Exception ex)
+		{
+			lastError = ex.toString();
+			return false;
+		}
+		finally
+		{
+			try
+			{
+				is.close();
+			}
+			catch (Exception _)
+			{
+				// no code
+			}
+		}
+	}
 }

@@ -28,7 +28,7 @@ public class RMSForm extends Form
 		saveType.setSelectedIndex(0, true);
 		append(saveType);
 		
-		saveName = new TextField("new file:", "", 20, TextField.ANY);
+		saveName = new TextField("new file:", "", 8, TextField.ANY);
 		append(saveName);
 		
 		fileList = new ChoiceGroup("load files:", ChoiceGroup.EXCLUSIVE);
@@ -78,9 +78,16 @@ public class RMSForm extends Form
 		if (saveType.getSelectedIndex() == 0) // NEW
 		{
 			String file = saveName.getString();
-			if (file == null || file.length() == 0)
+			if (file == null || file.length() == 0 || file.length() > 8)
 			{
-				info.setText("wrong file name");
+				info.setText("wrong file name (len=1-8)");
+				return false;
+			}
+			file = file.toUpperCase();
+			int head = file.charAt(0);
+			if (head < 'A'|| 'Z' < head)
+			{
+				info.setText("wrong file name (head=A-Z)");
 				return false;
 			}
 			for (int i = 0; i < file.length(); i++)
@@ -90,19 +97,11 @@ public class RMSForm extends Form
 				{
 					continue;
 				}
-				if ('a' <= ch && ch <= 'z')
-				{
-					continue;
-				}
 				if ('0' <= ch && ch <= '9')
 				{
 					continue;
 				}
-				if (ch == '.')
-				{
-					continue;
-				}
-				info.setText("wrong file name (invalid char)");
+				info.setText("wrong file name (char=A-Z0-9)");
 				return false;
 			}
 			for (int i = 0; i < fileList.size(); i++)
@@ -144,32 +143,32 @@ public class RMSForm extends Form
 		}
 		if (src == null || src.length() == 0)
 		{
-            String rsName = "casl2." + fileName;
-            try
-            {
-                curRS.closeRecordStore();
-            }
-            catch (RecordStoreException __)
-            {
-                // no code
-            }
-            curRS = null;
-            try
-            {
-                RecordStore.deleteRecordStore(rsName);
-            }    
+			String rsName = "casl2." + fileName;
+			try
+			{
+				curRS.closeRecordStore();
+			}
 			catch (RecordStoreException __)
 			{
 				// no code
 			}
-            for (int i = 0; i < fileList.size(); i++)
-            {
-                if (fileName.equals(fileList.getString(i)))
-                {
-                    fileList.delete(i);
-                    break;
-                }
-            }
+			curRS = null;
+			try
+			{
+				RecordStore.deleteRecordStore(rsName);
+			}    
+			catch (RecordStoreException __)
+			{
+				// no code
+			}
+			for (int i = 0; i < fileList.size(); i++)
+			{
+				if (fileName.equals(fileList.getString(i)))
+				{
+					fileList.delete(i);
+					break;
+				}
+			}
 			return false;
 		}
 		try
@@ -187,7 +186,7 @@ public class RMSForm extends Form
 		}
 		catch (RecordStoreException ex)
 		{
-            CASL2MIDlet.lastError = ex.toString();
+			CASL2MIDlet.lastError = ex.toString();
 			try
 			{
 				curRS.closeRecordStore();
@@ -221,7 +220,7 @@ public class RMSForm extends Form
 			catch (RecordStoreException  ex)
 			{
 				CASL2MIDlet.lastError = ex.toString();
-                if (curRS != null)
+				if (curRS != null)
 				try
 				{
 					curRS.closeRecordStore();
@@ -268,7 +267,7 @@ public class RMSForm extends Form
 		catch (RecordStoreException ex)
 		{
 			CASL2MIDlet.lastError = ex.toString();
-            if (curRS != null)
+			if (curRS != null)
 			{
 				try
 				{

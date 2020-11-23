@@ -19,6 +19,7 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 	private volatile boolean loop = true;
 	private volatile boolean step = false;
 	private final AtomicInteger state;
+	volatile String pgName = null;
 	volatile String srcCode = null;
 	volatile String message = "";
 	volatile int infoColor = 0xFFFFFF;
@@ -70,7 +71,7 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 			case STATE_COMPILE:
 				try
 				{
-					String res = compiler.compile(mem, srcCode);
+					String res = compiler.compile(mem, pgName, srcCode);
 					if (res == null)
 					{
 						comet2.resetRegisters();
@@ -171,10 +172,11 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 		}
 	}
 	
-	public void requestRun(String src, boolean step)
+	public void requestRun(String name, String src, boolean step)
 	{
 		if (state.compareAndSet(STATE_IDLE, STATE_COMPILE))
 		{
+			pgName = name;
 			srcCode = src;
 			this.step = step;
 		}
@@ -191,7 +193,7 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 
 	public void requestStop()
 	{
-        int nowState = state.get();
+		int nowState = state.get();
 		if (nowState != STATE_IDLE)
 		{
 			state.compareAndSet(nowState, STATE_STOP);

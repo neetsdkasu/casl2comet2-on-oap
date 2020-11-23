@@ -21,6 +21,7 @@ public final class Compiler
 	private static final int STATE_DS_SIZE    = 12;
 	private static final int STATE_DC_VALUES  = 13;
 	private static final int STATE_COMMENT    = 14;
+	private static final int STATE_START_POS  = 15;
 	
 	public Compiler()
 	{
@@ -103,7 +104,7 @@ public final class Compiler
 		return false;
 	}
 	
-	public String compile(Memory mem, String src)
+	public String compile(Memory mem, String pgName, String src)
 	{
 		if (src == null || src.length() == 0)
 		{
@@ -118,6 +119,9 @@ public final class Compiler
 		Hashtable labels = new Hashtable();
 		Comet2Command cur = new Comet2Command();
 		boolean comma = false;
+		String startLabel = null;
+		boolean startOfProgram = false;
+		boolean endOfProgram = false;
 		int dc_count = 0;
 		for (int i = 0; i < src.length(); i++)
 		{
@@ -135,6 +139,7 @@ public final class Compiler
 				case STATE_OUT_1:
 				case STATE_IN_1:
 				case STATE_DS_SIZE:
+				case STATE_START_POS:
 					return errmsg(lines, "comma!");
 				case STATE_DC_VALUES:
 					if (dc_count == 0)
@@ -162,6 +167,7 @@ public final class Compiler
 				{
 				case STATE_HEAD:
 				case STATE_COMMENT:
+				case STATE_START_POS:
 					break;
 				case STATE_ARG2_2:
 				case STATE_ARG3_3:
@@ -207,7 +213,15 @@ public final class Compiler
 						j++;
 					}
 					String tk = src.substring(i, j);
+					if (tk.length() < 2 || (tk.charAt(0) != '\'' && tk.charAt(0) != '=' && tk.charAt(1) != '\''))
+					{
+						tk = tk.toUpperCase();
+					}
 					i = j - 1;
+					if (endOfProgram)
+					{
+						return errmsg(lines, "program has ended: " + tk);
+					}
 					switch (state)
 					{
 					case STATE_HEAD:
@@ -216,6 +230,14 @@ public final class Compiler
 							// System.out.println("LABELING: " + tk + " -> " + Integer.toString(mempos, 16)); // debug
 							labels.put(tk, new Integer(mempos));
 							state = STATE_CMD;
+							if (startLabel == null && !startOfProgram)
+							{
+								startLabel = tk;
+								if (!tk.equals(pgName))
+								{
+									return errmsg(lines, "mismatch START label: " + tk + "<>" + pgName);
+								}
+							}
 						}
 						else
 						{
@@ -247,10 +269,20 @@ public final class Compiler
 							default:
 								if ("START".equals(tk))
 								{
-									state = STATE_COMMENT;
+									if (startLabel == null)
+									{
+										return errmsg(lines, "START require label");
+									}
+									if (startOfProgram)
+									{
+										return errmsg(lines, "duplicate START cmd");
+									}
+									startOfProgram = true;
+									state = STATE_START_POS;
 								}
 								else if ("END".equals(tk))
 								{
+									endOfProgram = true;
 									state = STATE_COMMENT;
 								}
 								else if ("DS".equals(tk))
@@ -308,6 +340,10 @@ public final class Compiler
 									return errmsg(lines, tk);
 								}
 								break;
+							}
+							if (!startOfProgram)
+							{
+								return errmsg(lines, "not found START: " + tk);
 							}
 						}
 						break;
@@ -389,6 +425,7 @@ public final class Compiler
 								literals.put(tk, new Integer(lines));
 							}
 							break;
+						/* cannot place string literal here
 						case '\'':
 							// TODO
 							switch (tk.length())
@@ -417,6 +454,7 @@ public final class Compiler
 								return errmsg(lines, tk);
 							}
 							break;
+						*/
 						default:
 							if (isDigit(ch) || ch == '-')
 							{
@@ -646,11 +684,32 @@ public final class Compiler
 						break;
 					case STATE_COMMENT:
 						break;
-					}
+					case STATE_START_POS:
+						if (isValidLabel(tk))
+						{
+							Comet2Command.validCommandName("JUMP", cur);
+							cur.label = tk;
+							mem.writeShort(cur.getCode());
+							mem.writeShort(0);
+							mempos += 2;
+							cmdList.addElement(cur);
+							cur = new Comet2Command();
+							state = STATE_COMMENT;
+						}
+						else
+						{
+							return errmsg(lines, tk);
+						}
+						break;
+					}    
 				}
 				comma = false;
 				break;
 			}
+		}
+		if (!endOfProgram)
+		{
+			return errmsg(lines, "not found END");
 		}
 		{	// last check
 			switch (state)
@@ -769,15 +828,15 @@ public final class Compiler
 		}
 		// System.out.println("cmdList bindings"); // debug
 		int num = 0;
-        for (Enumeration en = cmdList.elements(); en.hasMoreElements(); )
+		for (Enumeration en = cmdList.elements(); en.hasMoreElements(); )
 		{
-            num++;
+			num++;
 			Comet2Command cc = (Comet2Command)en.nextElement();
 			Integer adr = (Integer)labels.get(cc.label);
-            if (adr == null)
-            {
-                return errmsg(num, "not found label ! " + cc.label);
-            }
+			if (adr == null)
+			{
+				return errmsg(num, "not found label ! " + cc.label);
+			}
 			if (cc.cmd < 0)
 			{
 				mem.setPos(cc.pos << 1);
