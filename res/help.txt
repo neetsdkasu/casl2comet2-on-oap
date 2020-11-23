@@ -3,7 +3,7 @@ label-len: 1..8 (up-case:[up-case|num])
 dec: -32768..32767
 hex: #0000..#FFFF
 str: 'ab cd''efg'
-lit-adr: =123, =#123
+lit-adr: =123, =#123, ='abc'
 r:GR0-GR7
 x:GR1-GR7
 adr: label,dec,hex,lit-adr
@@ -40,8 +40,8 @@ SVC adr[,x]
 NOP
 START [label]
 END
-DS size(dec)
-DC value[,value]
+DS size (dec)
+DC value[,value] (label,dec,hex,str)
 IN buf-label,len-label (buf-size=256)
 OUT buf-label,len-label
 RPUSH (GR1..GR7)
