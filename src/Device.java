@@ -29,6 +29,21 @@ public abstract class Device
 	{
 		return data;
 	}
+	
+	public String getBuffer()
+	{
+		return null;
+	}
+
+	public void putBuffer(String buf)
+	{
+		// no code
+	}
+    
+    public boolean isEOF()
+    {
+        return false;
+    }
 
 	public abstract void sendCommand(int cmd);
 }

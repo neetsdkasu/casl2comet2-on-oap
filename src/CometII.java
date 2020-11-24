@@ -1,6 +1,3 @@
-import java.io.*;
-import java.lang.*;
-import java.util.*;
 
 public class CometII
 {
@@ -43,7 +40,7 @@ public class CometII
 		GR0 = GR1 = GR2 = GR3 = GR4 = GR5 = GR6 = GR7 = 0;
 	}
 	
-	public void setDevice(Device[] devs)
+	public void setDevices(Device[] devs)
 	{
 		stdin = stdout = stderr = null;
 		if (devs == null)
@@ -67,7 +64,7 @@ public class CometII
 			"Last OP: " + op,
 			"PR: " + PR + ", FR: " + FR + ", SP: " + SP,
 			"GR0: " + GR0 + ", GR1: " + GR1 + ", GR2: " + GR2 + ", GR3: " + GR3,
-			", GR4: " + GR4 + ", GR5: " + GR5 + ", GR6: " + GR6 + ", GR7: " + GR7
+			"GR4: " + GR4 + ", GR5: " + GR5 + ", GR6: " + GR6 + ", GR7: " + GR7
 		};
 	}
 	
@@ -662,6 +659,10 @@ public class CometII
 			memory.setPos(PR << 1);
 			break;
 		case 0x71: op = "POP: " + Integer.toString(code, 16);
+			if (SP == 0xFFFF)
+			{
+				throw new CometIIError("Stack is already Head !");
+			}
 			memory.setPos(SP << 1);
 			switch ((code & 0xF0) >> 4)
 			{
@@ -687,6 +688,10 @@ public class CometII
 			memory.setPos(PR << 1);
 			break;
 		case 0x81: op = "RET: " + Integer.toString(code, 16);
+			if (SP == 0xFFFF)
+			{
+				throw new CometIIError("Stack is already head!");
+			}
 			memory.setPos(SP << 1);
 			PR = mIn.readShort();
 			SP++;
@@ -705,10 +710,43 @@ public class CometII
 				}
 				else
 				{
+					// simulate OS program
 					int len = 0;
 					stdin.setState(Device.STATE_PREPARE);
 					stdin.sendCommand(1);
 					memory.setPos(GR1 << 1);
+					for (;;)
+					{
+						if (stdin.isEOF())
+						{
+							len = -1;
+							break;
+						}
+						String buf = stdin.getBuffer();
+						if (buf != null)
+						{
+							len = Math.min(256, buf.length());
+							for (int k = 0; k < len; k++)
+							{
+								int b = buf.charAt(k);
+								mOut.writeShort(b & 0xFF);
+							}
+							if (stdout != null)
+							{
+								stdout.putBuffer("? " + buf);
+							}
+							break;
+						}
+						try
+						{
+							Thread.sleep(300);
+						}
+						catch (InterruptedException _)
+						{
+							// no code
+						}
+					}
+					/*
 					for (;;)
 					{
 						int st;
@@ -738,6 +776,7 @@ public class CometII
 							break;
 						}
 					}
+					*/
 					memory.setPos(GR2 << 1);
 					mOut.writeShort(len);
 				}
@@ -750,11 +789,22 @@ public class CometII
 				}
 				else
 				{
+					// simulate OS program
 					memory.setPos(GR2 << 1);
 					int len = mIn.readShort();
-					stdout.sendCommand(len);
 					int bsize = 0;
 					memory.setPos(GR1 << 1);
+					{
+						StringBuffer sb = new StringBuffer(len);
+						for (int k = 0; k < len; k++)
+						{
+							int dt = mIn.readShort() & 0xFF;
+							sb.append((char)dt);
+						}
+						stdout.putBuffer(sb.toString());
+						sb = null;
+					}
+					/* stdout.sendCommand(len);
 					for (;;)
 					{
 						int st;
@@ -773,21 +823,24 @@ public class CometII
 						{
 							if (bsize < len) 
 							{
-								stdout.putData(mIn.readShort());
+								int dt = mIn.readShort();
+								stdout.putData(dt);
 								bsize++;
+								stdout.setState(Device.STATE_PREPARE);
 							}
 							else
 							{
-								break; // invalid state
+								break;
 							}
-							stdout.setState(Device.STATE_PREPARE);
 						}
 						else // if (st == Device.STATE_STANDBY || st == Device.STATE_ERROR)
 						{
+							// System.out.println("piyo" + st + " siz:" + bsize + " len: " + len);
 							break;
 						}
 					}
 					stdout.sendCommand(0);
+					*/ 
 				}
 				break;
 			
@@ -849,7 +902,7 @@ public class CometII
 		case 0xF8: case 0xF9: case 0xFA: case 0xFB: case 0xFC: case 0xFD: case 0xFE: case 0xFF:
 		
 		default: 
-			throw new CometIIError("???: " + Integer.toString(code, 16));
+			throw new CometIIError("???: #" + Integer.toString(code, 16));
 		}
 	}
 	
@@ -906,99 +959,6 @@ public class CometII
 				stderr.sendCommand(0);
 			}
 			// ex.printStackTrace();
-		}
-	}
-	
-	public static void mainx(String[] args) throws java.lang.Exception
-	{
-		Memory mem = new Memory(1000);
-		DataOutputStream dOut = mem.out;
-		
-		dOut.writeShort(0x1210); // LAD GR1, 35
-		dOut.writeShort(35);
-		
-		dOut.writeShort(0x1220); // LAD GR2, 99
-		dOut.writeShort(99);
-		
-		dOut.writeShort(0x7001); // PUSH 0, GR1
-		dOut.writeShort(0);
-		
-		dOut.writeShort(0x7002); // PUSH 0, GR2
-		dOut.writeShort(0);
-		
-		dOut.writeShort(0x2522); // SUBA GR2, GR2
-		
-		dOut.writeShort(0x3411); // AND GR1, GR1
-		
-		dOut.writeShort(0x6300); // JZE LABEL-RETURN
-		int p1 = mem.getOutPos();
-		dOut.writeShort(0);      // Writing After time
-		
-		int p2 = mem.getOutPos(); // LABEL-MORE
-		
-		dOut.writeShort(0x1222);  // LAD GR2, 1, GR2
-		dOut.writeShort(1);
-
-		dOut.writeShort(0x1201);  // LAD GR0, -1, GR1
-		dOut.writeShort(-1);
-		
-		dOut.writeShort(0x3410);  // AND GR1, GR0
-		
-		dOut.writeShort(0x6200);  // JNZ LABEL-MORE
-		dOut.writeShort(p2 >> 1);
-		
-		int p3 = mem.getOutPos(); // LABEL-RETURN
-		
-		dOut.writeShort(0x1402); // LD GR0, GR2
-		
-		dOut.writeShort(0x1210); // LAD GR1, LABEL-BUF
-		int p4 = mem.getOutPos();
-		dOut.writeShort(0);       // writing after
-
-		dOut.writeShort(0x1220); // LAD GR2, LABEL-BUFLEN
-		int p5 = mem.getOutPos();
-		dOut.writeShort(0);       // writing after
-		
-		dOut.writeShort(0xF000); // SVC 1
-		dOut.writeShort(1);
-
-		dOut.writeShort(0xF000); // SVC 2
-		dOut.writeShort(2);
-		
-		dOut.writeShort(0x7120); // POP GR2
-		
-		dOut.writeShort(0x7110); // POP GR1
-		
-		dOut.writeShort(0x8100); // RET
-		
-		int p6 = mem.getOutPos(); // LABEL-BUF
-		
-		dOut.write(new byte[256 << 1]);
-		
-		int p7 = mem.getOutPos(); // LABEL-BUFLEN
-		
-		dOut.writeShort(0);
-		
-		mem.setPos(p1);
-		dOut.writeShort(p3 >> 1); // Write JZE LABEL-RETURN
-		
-		mem.setPos(p4);
-		dOut.writeShort(p6 >> 1); // Write LAD GR1, LABEL-BUF
-		
-		mem.setPos(p5);
-		dOut.writeShort(p7 >> 1); // Write LAD GR2, LABEL-BUFLEN
-		
-		
-		CometII c2 = new CometII(mem.mem);
-		
-		c2.setDevice(new Device[]{ null,  new KeyBoard() });
-		
-		System.out.println(c2.toString());
-		for (int i = 0; i < 100; i++) {
-			//System.in.read();
-			c2.step();
-			System.out.println();
-			System.out.println(c2.toString());
 		}
 	}
 	
