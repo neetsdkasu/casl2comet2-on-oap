@@ -15,7 +15,7 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 	private static final int STATE_STEPWAIT  = 3;
 	private static final int STATE_STOP      = 4;
 	private static final int STATE_INFO      = 5;
-	
+
 	private volatile boolean loop = true;
 	private volatile boolean step = false;
 	private final AtomicInteger state;
@@ -24,20 +24,26 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 	volatile String message = "";
 	volatile int infoColor = 0xFFFFFF;
 	Device keyBoard = null;
-	
+	private Compiler.Loader loader = null;
+
 	public CASL2Canvas(Device kybd)
 	{
 		super(false);
 		keyBoard = kybd;
 		state = new AtomicInteger(STATE_IDLE);
 	}
-	
+
+	public void setLoader(Compiler.Loader loader)
+	{
+		this.loader = loader;
+	}
+
 	private void clear(Graphics g)
 	{
 		g.setColor(0x000000);
 		g.fillRect(0, 0, 240, 268);
 	}
-	
+
 	public void run()
 	{
 		Graphics g = getGraphics();
@@ -51,7 +57,7 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 		Memory mem = comet2.memory;
 		Console console = new Console(0xFFFFFF);
 		comet2.setDevices(new Device[]{ keyBoard, console});
-		Compiler compiler = new Compiler();
+		Compiler compiler = new Compiler(mem);
 		loop = true;
 		while (loop)
 		{
@@ -71,20 +77,54 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 			case STATE_COMPILE:
 				try
 				{
-					String res = compiler.compile(mem, pgName, srcCode);
-					if (res == null)
+					compiler.reset();
+					String name = pgName;
+					String src = srcCode;
+					String errmsg = null;
+					for (;;)
 					{
-						comet2.resetRegisters();
-						state.compareAndSet(nowState, STATE_RUNNING);
-					}
-					else
-					{
-						console.print(res, 0xFF0000);
-						clear(g);
-						console.paint(g);
-						flushGraphics();
-						state.compareAndSet(nowState, STATE_IDLE);
-						// System.out.println(res);
+						int res = compiler.addSource(name, src);
+						if (res == Compiler.COMPILE_SUCCESS)
+						{
+							comet2.resetRegisters();
+							state.compareAndSet(nowState, STATE_RUNNING);
+							break;
+						}
+						else if (res == Compiler.COMPILE_NEEDSRC)
+						{
+							name = compiler.getRequestName();
+							if (name == null)
+							{
+								errmsg = "BUG not found request name";
+							}
+							else if (loader == null)
+							{
+								errmsg = "BUG not found loader";
+							}
+							else
+							{
+								src = loader.loadSrc(name);
+								if (src == null)
+								{
+									errmsg = "not found source: " + name;
+								}
+							}
+						}
+						else
+						{
+							errmsg = compiler.getErrorMessage();
+						}
+
+						if (errmsg != null)
+						{
+							console.print(errmsg, 0xFF0000);
+							clear(g);
+							console.paint(g);
+							flushGraphics();
+							state.compareAndSet(nowState, STATE_IDLE);
+							// System.out.println(res);
+							break;
+						}
 					}
 				}
 				catch (Exception ex)
@@ -171,7 +211,7 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 			}
 		}
 	}
-	
+
 	public void requestRun(String name, String src, boolean step)
 	{
 		if (state.compareAndSet(STATE_IDLE, STATE_COMPILE))
@@ -181,7 +221,7 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 			this.step = step;
 		}
 	}
-	
+
 	public void requestInfo(String msg, int ic)
 	{
 		if (state.compareAndSet(STATE_IDLE, STATE_INFO))
@@ -199,7 +239,7 @@ public final class CASL2Canvas extends GameCanvas implements Runnable
 			state.compareAndSet(nowState, STATE_STOP);
 		}
 	}
-	
+
 	public void requestEndLoop()
 	{
 		loop = false;

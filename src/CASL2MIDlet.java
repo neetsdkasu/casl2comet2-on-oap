@@ -15,15 +15,15 @@ import javax.microedition.midlet.MIDletStateChangeException;
 public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 {
 	public static String lastError = "nothing";
-	
+
 	private Thread mainloop = null;
-	
+
 	private CASL2Canvas mainDisp  = null;
 	private CodingBox   codingBox = null;
 	private RMSForm     fileMgr   = null;
 	private InputBox    inputBox  = null;
 	private Form        helpView  = null;
-	
+
 	private Command exitCommand     = null;
 	private Command helpCommand     = null;
 	private Command runCommand      = null;
@@ -38,35 +38,37 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 	private Command breakCommand    = null;
 	private Command errorCommand    = null;
 	private Command closeHelpCommand= null;
-	
+
 	private boolean existFile = false;
-	
+
 	private KeyBoard keyBoard = null;
-	
+
 	public CASL2MIDlet()
 	{
 		super();
-		
+
 		keyBoard = new KeyBoard(this);
-		
+
 		mainDisp  = new CASL2Canvas(keyBoard);
 		codingBox = new CodingBox();
 		fileMgr   = new RMSForm();
 		inputBox  = new InputBox();
 		helpView  = new Form("Help");
-		
-		exitCommand = new Command("EXIT", Command.EXIT, 1);		
+
+		mainDisp.setLoader(fileMgr);
+
+		exitCommand = new Command("EXIT", Command.EXIT, 1);
 		mainDisp.addCommand(exitCommand);
 
 		runCommand = new Command("RUN", Command.SCREEN, 1);
 		mainDisp.addCommand(runCommand);
-		
+
 		stepCommand = new Command("STEP", Command.SCREEN, 2);
 		mainDisp.addCommand(stepCommand);
 
 		stopCommand = new Command("STOP", Command.SCREEN, 3);
 		mainDisp.addCommand(stopCommand);
-		
+
 		fileCommand = new Command("FILE", Command.SCREEN, 4);
 		mainDisp.addCommand(fileCommand);
 
@@ -75,19 +77,19 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 
 		errorCommand = new Command("ERROR", Command.SCREEN, 6);
 		mainDisp.addCommand(errorCommand);
-		
+
 		helpCommand = new Command("HELP", Command.SCREEN, 7);
 		mainDisp.addCommand(helpCommand);
-		
+
 		closeCommand = new Command("CLOSE", Command.SCREEN, 1);
 		codingBox.addCommand(closeCommand);
-		
+
 		cancelCommand = new Command("CANCEL", Command.SCREEN, 1);
 		fileMgr.addCommand(cancelCommand);
 
 		selectCommand = new Command("SELECT", Command.SCREEN, 2);
 		fileMgr.addCommand(selectCommand);
-		
+
 		okCommand = new Command("OK", Command.SCREEN, 1);
 		inputBox.addCommand(okCommand);
 
@@ -102,17 +104,17 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		fileMgr.setCommandListener(this);
 		inputBox.setCommandListener(this);
 		helpView.setCommandListener(this);
-		
+
 		loadHelpText();
-		
+
 		Display.getDisplay(this).setCurrent(mainDisp);
 	}
-	
+
 	public void call()
 	{
 		Display.getDisplay(this).setCurrent(inputBox);
 	}
-	
+
 	private void requestEndLoop()
 	{
 		if (mainDisp != null)
@@ -140,18 +142,18 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			fileMgr.close();
 		}
 	}
-	
+
 	protected void destroyApp(boolean unconditional)
 			throws MIDletStateChangeException
 	{
 		requestEndLoop();
 	}
-	
+
 	protected void pauseApp()
 	{
 		// no code
 	}
-	
+
 	protected void startApp()
 			throws MIDletStateChangeException
 	{
@@ -161,7 +163,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			mainloop.start();
 		}
 	}
-	
+
 	public void commandAction(Command cmd, Displayable disp)
 	{
 		if (cmd == exitCommand)
@@ -273,7 +275,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			Display.getDisplay(this).setCurrent(mainDisp);
 		}
 	}
-	
+
 	private boolean loadHelpText()
 	{
 		InputStream is = getClass().getResourceAsStream("/help.txt");
@@ -282,7 +284,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			lastError = "not found resource";
 			return false;
 		}
-		try 
+		try
 		{
 			InputStreamReader isr = new InputStreamReader(is, "UTF-8");
 			StringBuffer sb = new StringBuffer();

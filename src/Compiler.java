@@ -6,6 +6,16 @@ import java.util.Vector;
 
 public final class Compiler
 {
+	public static int COMPILE_SUCCESS = 0;
+	public static int COMPILE_ERROR   = 1;
+	public static int COMPILE_NEEDSRC = 2;
+	public static int COMPILE_IMPLBUG = 3;
+	
+	public static interface Loader
+	{
+		String loadSrc(String name);
+	}
+
 	private static final int STATE_HEAD       = 0;
 	private static final int STATE_CMD        = 1;
 	private static final int STATE_ARG1       = 2;
@@ -22,12 +32,7 @@ public final class Compiler
 	private static final int STATE_DC_VALUES  = 13;
 	private static final int STATE_COMMENT    = 14;
 	private static final int STATE_START_POS  = 15;
-	
-	public Compiler()
-	{
-		
-	}
-	
+
 	private static int toRegeister(String name)
 	{
 		if (name != null && name.length() == 3 && name.charAt(0) == 'G' && name.charAt(1) == 'R')
@@ -40,7 +45,7 @@ public final class Compiler
 		}
 		return -1;
 	}
-	
+
 	private static int toIndexRegister(String name)
 	{
 		if (name != null && name.length() == 3 && name.charAt(0) == 'G' && name.charAt(1) == 'R')
@@ -53,31 +58,16 @@ public final class Compiler
 		}
 		return -1;
 	}
-	
-	private static String errmsg(int lines)
-	{
-		return errmsg(lines, null);
-	}
-	
-	private static String errmsg(int lines, String tok)
-	{
-		if (tok == null || tok.length() == 0)
-		{
-			return "syntax error (" + String.valueOf(lines) + ")";
-		}
-		return "syntax error (" + String.valueOf(lines) + "):" + tok;
-	}
-	
 	private static boolean isAlphabet(int ch)
 	{
 		return ('A' <= ch && ch <= 'Z') || ('a' <= ch && ch <= 'z');
 	}
-	
+
 	private static boolean isDigit(int ch)
 	{
 		return '0' <= ch && ch <= '9';
 	}
-	
+
 	private static boolean isValidLabel(String name)
 	{
 		if (toRegeister(name) >= 0)
@@ -103,16 +93,105 @@ public final class Compiler
 		}
 		return false;
 	}
-	
-	public String compile(Memory mem, String pgName, String src)
+
+	private Memory mem = null;
+	private int mempos = 0;
+	private Hashtable link = null;
+	private Vector unsolvedName = null;
+	private Vector unsolvedCmdList = null;
+	private String errorMessage = "";
+	private String targetSrcName = "";
+
+	public Compiler(Memory mem)
 	{
+		this.mem = mem;
+	}
+	
+	public String getErrorMessage()
+	{
+		return errorMessage;
+	}
+
+	private int implbug(String msg)
+	{
+		errorMessage = "BUG: " + msg;
+		return COMPILE_IMPLBUG;
+	}
+
+	private int syntaxErr(int lines)
+	{
+		return syntaxErr(lines, null);
+	}
+
+	private int syntaxErr(int lines, String tok)
+	{
+		if (tok == null || tok.length() == 0)
+		{
+			errorMessage = "syntax error (" + String.valueOf(lines) + ") in " + targetSrcName;
+		}
+		else {
+			errorMessage = "syntax error (" + String.valueOf(lines) + "):" + tok + " in " + targetSrcName;
+		}
+		return COMPILE_ERROR;
+	}
+
+	public void reset()
+	{
+		mem.setPos(0);
+		mempos = 0;
+		link = new Hashtable();
+		unsolvedName = new Vector();
+		unsolvedCmdList = new Vector();
+		targetSrcName = "";
+	}
+
+	public String getRequestName()
+	{
+		if (unsolvedName == null || unsolvedName.isEmpty())
+		{
+			return null;
+		}
+		return (String)unsolvedName.lastElement();
+	}
+
+	private void addName(String name)
+	{
+		for (int i = 0; i < unsolvedName.size(); i++)
+		{
+			if (name.equals(unsolvedName.elementAt(i)))
+			{
+				return;
+			}
+		}
+		unsolvedName.addElement(name);
+	}
+
+	private void removeName(String name)
+	{
+		for (int i = 0; i < unsolvedName.size(); i++)
+		{
+			if (name.equals(unsolvedName.elementAt(i)))
+			{
+				unsolvedName.removeElementAt(i);
+				return;
+			}
+		}
+	}
+
+	public int addSource(String pgName, String src)
+	{
+		if (pgName == null || pgName.length() == 0)
+		{
+			return implbug("no name");
+		}
 		if (src == null || src.length() == 0)
 		{
-			return "no source";
+			return implbug("no source");
 		}
-		mem.setPos(0);
+		targetSrcName = pgName;
+		
+		mem.setPos(mempos << 1);
 		int lines = 1;
-		int mempos = 0;
 		int state = STATE_HEAD;
 		Vector cmdList = new Vector();
 		Hashtable literals = new Hashtable();
@@ -140,17 +219,17 @@ public final class Compiler
 				case STATE_IN_1:
 				case STATE_DS_SIZE:
 				case STATE_START_POS:
-					return errmsg(lines, "comma!");
+					return syntaxErr(lines, "comma!");
 				case STATE_DC_VALUES:
 					if (dc_count == 0)
 					{
-						return errmsg(lines);
+						return syntaxErr(lines);
 					}
 					break;
 				}
 				if (comma)
 				{
-					return errmsg(lines);
+					return syntaxErr(lines);
 				}
 				comma = true;
 				break;
@@ -188,11 +267,11 @@ public final class Compiler
 				case STATE_DC_VALUES:
 					if (dc_count == 0)
 					{
-						return errmsg(lines);
+						return syntaxErr(lines);
 					}
 					break;
 				default:
-					return errmsg(lines);
+					return syntaxErr(lines);
 				}
 				comma = false;
 				if (ch == '\n')
@@ -220,7 +299,7 @@ public final class Compiler
 					i = j - 1;
 					if (endOfProgram)
 					{
-						return errmsg(lines, "program has ended: " + tk);
+						return syntaxErr(lines, "program has ended: " + tk);
 					}
 					switch (state)
 					{
@@ -235,13 +314,13 @@ public final class Compiler
 								startLabel = tk;
 								if (!tk.equals(pgName))
 								{
-									return errmsg(lines, "mismatch START label: " + tk + "<>" + pgName);
+									return syntaxErr(lines, "mismatch START label: " + tk + "<>" + pgName);
 								}
 							}
 						}
 						else
 						{
-							return errmsg(lines, tk);
+							return syntaxErr(lines, tk);
 						}
 						break;
 					case STATE_CMD:
@@ -271,11 +350,11 @@ public final class Compiler
 								{
 									if (startLabel == null)
 									{
-										return errmsg(lines, "START require label");
+										return syntaxErr(lines, "START require label");
 									}
 									if (startOfProgram)
 									{
-										return errmsg(lines, "duplicate START cmd");
+										return syntaxErr(lines, "duplicate START cmd");
 									}
 									startOfProgram = true;
 									state = STATE_START_POS;
@@ -337,13 +416,13 @@ public final class Compiler
 								}
 								else
 								{
-									return errmsg(lines, tk);
+									return syntaxErr(lines, tk);
 								}
 								break;
 							}
 							if (!startOfProgram)
 							{
-								return errmsg(lines, "not found START: " + tk);
+								return syntaxErr(lines, "not found START: " + tk);
 							}
 						}
 						break;
@@ -353,7 +432,7 @@ public final class Compiler
 							int r = toRegeister(tk);
 							if (r < 0)
 							{
-								return errmsg(lines, tk); 
+								return syntaxErr(lines, tk);
 							}
 							cur.arg1 = r;
 							switch (state)
@@ -374,7 +453,7 @@ public final class Compiler
 						// addr or lit or label or reg
 						if (!comma)
 						{
-							return errmsg(lines, "no comma ! " + tk);
+							return syntaxErr(lines, "no comma ! " + tk);
 						}
 						else
 						{
@@ -391,7 +470,7 @@ public final class Compiler
 								}
 								else
 								{
-									return errmsg(lines, tk);
+									return syntaxErr(lines, tk);
 								}
 								break;
 							}
@@ -403,7 +482,7 @@ public final class Compiler
 						case '#':
 							if (tk.length() < 2)
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 							try
 							{
@@ -411,13 +490,13 @@ public final class Compiler
 							}
 							catch (NumberFormatException _)
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 							break;
 						case '=':
 							if (tk.length() < 2)
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 							cur.label = tk;
 							if (!literals.containsKey(tk))
@@ -433,25 +512,25 @@ public final class Compiler
 							case 3:
 								if (tk.charAt(2) != '\'')
 								{
-									return errmsg(lines, tk);
+									return syntaxErr(lines, tk);
 								}
 								int d = tk.charAt(1);
 								switch (d)
 								{
 								case '\'':
-									return errmsg(lines, tk);
+									return syntaxErr(lines, tk);
 								}
 								cur.arg2 = d;
 								break;
 							case 4:
 								if (!"''''".equals(tk))
 								{
-									return errmsg(lines, tk);
+									return syntaxErr(lines, tk);
 								}
 								cur.arg2 = ch;
 								break;
 							default:
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 							break;
 						*/
@@ -464,7 +543,7 @@ public final class Compiler
 								}
 								catch (NumberFormatException _)
 								{
-									return errmsg(lines, tk);
+									return syntaxErr(lines, tk);
 								}
 							}
 							else if (isValidLabel(tk))
@@ -473,7 +552,7 @@ public final class Compiler
 							}
 							else
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 						}
 						switch (state)
@@ -488,15 +567,15 @@ public final class Compiler
 						// ireg
 						if (!comma)
 						{
-							return errmsg(lines, "no comma ! " + tk);
+							return syntaxErr(lines, "no comma ! " + tk);
 						}
 						else
 						{
 							int r = toIndexRegister(tk);
 							if (r < 0)
 							{
-								return errmsg(lines, tk);
-								
+								return syntaxErr(lines, tk);
+
 							}
 							cur.arg3 = r;
 							mem.writeShort(cur.getCode());
@@ -518,7 +597,7 @@ public final class Compiler
 					case STATE_IN_2:
 						if (!comma)
 						{
-							return errmsg(lines, "no comma ! " + tk);
+							return syntaxErr(lines, "no comma ! " + tk);
 						}
 					case STATE_OUT_1:
 					case STATE_IN_1:
@@ -570,14 +649,14 @@ public final class Compiler
 						}
 						else
 						{
-							return errmsg(lines, tk);
+							return syntaxErr(lines, tk);
 						}
 						break;
 					case STATE_DS_SIZE:
 						// addr
 						if (ch == '-')
 						{
-							return errmsg(lines, tk);
+							return syntaxErr(lines, tk);
 						}
 						try
 						{
@@ -599,14 +678,14 @@ public final class Compiler
 						}
 						catch (NumberFormatException _)
 						{
-							return errmsg(lines, tk);
+							return syntaxErr(lines, tk);
 						}
 						break;
 					case STATE_DC_VALUES:
 						// value
 						if (dc_count > 0 && !comma)
 						{
-							return errmsg(lines, "no comma ! " + tk);
+							return syntaxErr(lines, "no comma ! " + tk);
 						}
 						dc_count++;
 						switch (ch)
@@ -614,7 +693,7 @@ public final class Compiler
 						case '#':
 							if (tk.length() < 2)
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 							try
 							{
@@ -624,17 +703,17 @@ public final class Compiler
 							}
 							catch (NumberFormatException _)
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 							break;
 						case '\'':
 							if (tk.length() < 3)
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 							if (tk.charAt(tk.length() - 1) != '\'')
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 							for (int e = 1; e < tk.length() - 1; e++)
 							{
@@ -643,7 +722,7 @@ public final class Compiler
 								{
 									if (e + 1 >= tk.length() - 1 || tk.charAt(e + 1) != '\'')
 									{
-										return errmsg(lines, tk);
+										return syntaxErr(lines, tk);
 									}
 									e++;
 								}
@@ -662,7 +741,7 @@ public final class Compiler
 								}
 								catch (NumberFormatException _)
 								{
-									return errmsg(lines, tk);
+									return syntaxErr(lines, tk);
 								}
 							}
 							else if (isValidLabel(tk))
@@ -678,7 +757,7 @@ public final class Compiler
 							}
 							else
 							{
-								return errmsg(lines, tk);
+								return syntaxErr(lines, tk);
 							}
 						}
 						break;
@@ -698,10 +777,10 @@ public final class Compiler
 						}
 						else
 						{
-							return errmsg(lines, tk);
+							return syntaxErr(lines, tk);
 						}
 						break;
-					}    
+					}
 				}
 				comma = false;
 				break;
@@ -709,7 +788,7 @@ public final class Compiler
 		}
 		if (!endOfProgram)
 		{
-			return errmsg(lines, "not found END");
+			return syntaxErr(lines, "not found END");
 		}
 		{	// last check
 			switch (state)
@@ -736,11 +815,11 @@ public final class Compiler
 			case STATE_DC_VALUES:
 				if (dc_count == 0)
 				{
-					return errmsg(lines);
+					return syntaxErr(lines);
 				}
 				break;
 			default:
-				return errmsg(lines);
+				return syntaxErr(lines);
 			}
 		}
 		for (Enumeration en = literals.keys(); en.hasMoreElements(); )
@@ -749,7 +828,7 @@ public final class Compiler
 			if (lit.length() < 2)
 			{
 				Integer i = (Integer)literals.get(lit);
-				return errmsg(i.intValue(), lit);
+				return syntaxErr(i.intValue(), lit);
 			}
 			// System.out.println("LITERAL: " + lit + " POS:" + Integer.toString(mempos, 16)); // debug
 			int ch = lit.charAt(1);
@@ -759,7 +838,7 @@ public final class Compiler
 				if (lit.length() < 3)
 				{
 					Integer i = (Integer)literals.get(lit);
-					return errmsg(i.intValue(), lit);
+					return syntaxErr(i.intValue(), lit);
 				}
 				try
 				{
@@ -771,19 +850,19 @@ public final class Compiler
 				catch (NumberFormatException _)
 				{
 					Integer i = (Integer)literals.get(lit);
-					return errmsg(i.intValue(), lit);
+					return syntaxErr(i.intValue(), lit);
 				}
 				break;
 			case '\'':
 				if (lit.length() < 3)
 				{
 					Integer i = (Integer)literals.get(lit);
-					return errmsg(i.intValue(), lit);
+					return syntaxErr(i.intValue(), lit);
 				}
 				if (lit.charAt(lit.length() - 1) != '\'')
 				{
 					Integer i = (Integer)literals.get(lit);
-					return errmsg(i.intValue(), lit);
+					return syntaxErr(i.intValue(), lit);
 				}
 				labels.put(lit, new Integer(mempos));
 				for (int e = 2; e < lit.length() - 1; e++)
@@ -794,7 +873,7 @@ public final class Compiler
 						if (e + 1 >= lit.length() - 1 || lit.charAt(e + 1) != '\'')
 						{
 							Integer i = (Integer)literals.get(lit);
-							return errmsg(i.intValue(), lit);
+							return syntaxErr(i.intValue(), lit);
 						}
 						e++;
 					}
@@ -815,18 +894,43 @@ public final class Compiler
 					catch (NumberFormatException _)
 					{
 						Integer i = (Integer)literals.get(lit);
-						return errmsg(i.intValue(), lit);
+						return syntaxErr(i.intValue(), lit);
 					}
 				}
 				else
 				{
 					Integer i = (Integer)literals.get(lit);
-					return errmsg(i.intValue(), lit);
+					return syntaxErr(i.intValue(), lit);
 				}
 				break;
 			}
 		}
 		// System.out.println("cmdList bindings"); // debug
+		Vector unsolvedTemp = new Vector();
+		link.put(pgName, labels.get(pgName));
+		System.out.println(pgName + " " + labels.get(pgName).toString());
+		removeName(pgName);
+		for (Enumeration en = unsolvedCmdList.elements(); en.hasMoreElements(); )
+		{
+			Comet2Command cc = (Comet2Command)en.nextElement();
+			Integer adr = (Integer)labels.get(cc.label);
+			if (adr == null)
+			{
+				unsolvedTemp.addElement(cc);
+				continue;
+			}
+			if (cc.cmd < 0)
+			{
+				mem.setPos(cc.pos << 1);
+				mem.writeShort(adr.intValue());
+			}
+			else
+			{
+				int p = cc.pos + 1;
+				mem.setPos(p << 1);
+				mem.writeShort(adr.intValue());
+			}
+		}
 		int num = 0;
 		for (Enumeration en = cmdList.elements(); en.hasMoreElements(); )
 		{
@@ -835,7 +939,13 @@ public final class Compiler
 			Integer adr = (Integer)labels.get(cc.label);
 			if (adr == null)
 			{
-				return errmsg(num, "not found label ! " + cc.label);
+				adr = (Integer)link.get(cc.label);
+				if (adr == null)
+				{
+					unsolvedTemp.addElement(cc);
+					addName(cc.label);
+					continue;
+				}
 			}
 			if (cc.cmd < 0)
 			{
@@ -860,6 +970,12 @@ public final class Compiler
 		// System.out.println("mempos: " + mempos);
 		// System.out.println("pos: " +  mem.getOutPos());
 		*/
-		return null;
+		unsolvedCmdList = unsolvedTemp;
+		if (!unsolvedCmdList.isEmpty())
+		{
+			errorMessage = "NEED MORE SOURCE";
+			return COMPILE_NEEDSRC;
+		}
+		return COMPILE_SUCCESS;
 	}
 }

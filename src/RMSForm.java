@@ -5,7 +5,7 @@ import javax.microedition.lcdui.TextField;
 import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException ;
 
-public class RMSForm extends Form
+public class RMSForm extends Form implements Compiler.Loader
 {
 	StringItem info;
 	ChoiceGroup saveType;
@@ -14,25 +14,25 @@ public class RMSForm extends Form
 	RecordStore curRS = null;
 	String fileName = null;
 	boolean isNewFile = false;
-	
+
 	public RMSForm()
 	{
 		super("Files");
-		
+
 		info = new StringItem(null, null);
 		append(info);
-		
+
 		saveType = new ChoiceGroup("save type:", ChoiceGroup.EXCLUSIVE);
-		saveType.append("NEW", null);		
-		saveType.append("LOAD", null);		
+		saveType.append("NEW", null);
+		saveType.append("LOAD", null);
 		saveType.setSelectedIndex(0, true);
 		append(saveType);
-		
+
 		saveName = new TextField("new file:", "", 8, TextField.ANY);
 		append(saveName);
-		
+
 		fileList = new ChoiceGroup("load files:", ChoiceGroup.EXCLUSIVE);
-		String[] list = RecordStore.listRecordStores();		
+		String[] list = RecordStore.listRecordStores();
 		if (list != null)
 		{
 			for (int i = 0; i < list.length; i++)
@@ -45,12 +45,12 @@ public class RMSForm extends Form
 		}
 		append(fileList);
 	}
-	
+
 	public void clearFields()
 	{
 		info.setText(null);
 	}
-	
+
 	public void close()
 	{
 		if (curRS == null)
@@ -67,12 +67,12 @@ public class RMSForm extends Form
 		}
 		curRS = null;
 	}
-	
+
 	public String getFileName()
 	{
 		return fileName;
 	}
-	
+
 	public boolean isValid()
 	{
 		if (saveType.getSelectedIndex() == 0) // NEW
@@ -134,7 +134,7 @@ public class RMSForm extends Form
 		info.setText(null);
 		return true;
 	}
-	
+
 	public boolean saveSrc(String src)
 	{
 		if (curRS == null)
@@ -156,7 +156,7 @@ public class RMSForm extends Form
 			try
 			{
 				RecordStore.deleteRecordStore(rsName);
-			}    
+			}
 			catch (RecordStoreException __)
 			{
 				// no code
@@ -199,11 +199,12 @@ public class RMSForm extends Form
 			return false;
 		}
 	}
-	
+
 	public String getSrc()
 	{
 		if (fileName == null)
 		{
+			CASL2MIDlet.lastError = "fileName is null";
 			return null;
 		}
 		String rsName = "casl2." + fileName;
@@ -281,7 +282,107 @@ public class RMSForm extends Form
 			}
 			return null;
 		}
-		
+
 	}
-	
+
+	public String loadSrc(String name)
+	{
+		if (name == null)
+		{
+			CASL2MIDlet.lastError = "name is null";
+			return null;
+		}
+		boolean found = false;
+		for (int i = 0; i < fileList.size(); i++)
+		{
+			if (name.equals(fileList.getString(i)))
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+		{
+			CASL2MIDlet.lastError = "name is not found";
+			return null;
+		}
+		String rsName = "casl2." + name;
+		RecordStore rs = null;
+		if (curRS != null)
+		{
+			try
+			{
+				if (rsName.equals(curRS.getName()))
+				{
+					rs = curRS;
+				}
+			}
+			catch (RecordStoreException  ex)
+			{
+				CASL2MIDlet.lastError = ex.toString();
+				if (curRS != null)
+				try
+				{
+					curRS.closeRecordStore();
+				}
+				catch (RecordStoreException __)
+				{
+					// no code
+				}
+				curRS = null;
+				return null;
+			}
+		}
+		try
+		{
+			if (rs == null) {
+				rs = RecordStore.openRecordStore(rsName, false);
+			}
+			if (rs.getNumRecords() == 0)
+			{
+				return "";
+			}
+			byte[] buf = rs.getRecord(1);
+			if (buf == null)
+			{
+				return "";
+			}
+			return new String(buf);
+		}
+		catch (RecordStoreException ex)
+		{
+			CASL2MIDlet.lastError = ex.toString();
+			if (rs != null)
+			{
+				try
+				{
+					rs.closeRecordStore();
+				}
+				catch (RecordStoreException __)
+				{
+					// no code
+				}
+				if (rs == curRS)
+				{
+					curRS = null;
+				}
+			}
+			return null;
+		}
+		finally
+		{
+			if (rs != null && rs != curRS)
+			{
+				try
+				{
+					rs.closeRecordStore();
+				}
+				catch (RecordStoreException __)
+				{
+					// no code
+				}
+			}
+		}
+	}
+
 }
