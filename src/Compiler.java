@@ -908,7 +908,7 @@ public final class Compiler
 		// System.out.println("cmdList bindings"); // debug
 		Vector unsolvedTemp = new Vector();
 		link.put(pgName, labels.get(pgName));
-		System.out.println(pgName + " " + labels.get(pgName).toString());
+		// System.out.println(pgName + " " + labels.get(pgName).toString());
 		removeName(pgName);
 		for (Enumeration en = unsolvedCmdList.elements(); en.hasMoreElements(); )
 		{
