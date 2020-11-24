@@ -28,7 +28,7 @@ public final class Compiler
 		
 	}
 	
-	private int toRegeister(String name)
+	private static int toRegeister(String name)
 	{
 		if (name != null && name.length() == 3 && name.charAt(0) == 'G' && name.charAt(1) == 'R')
 		{
@@ -41,7 +41,7 @@ public final class Compiler
 		return -1;
 	}
 	
-	private int toIndexRegister(String name)
+	private static int toIndexRegister(String name)
 	{
 		if (name != null && name.length() == 3 && name.charAt(0) == 'G' && name.charAt(1) == 'R')
 		{
@@ -54,12 +54,12 @@ public final class Compiler
 		return -1;
 	}
 	
-	private String errmsg(int lines)
+	private static String errmsg(int lines)
 	{
 		return errmsg(lines, null);
 	}
 	
-	private String errmsg(int lines, String tok)
+	private static String errmsg(int lines, String tok)
 	{
 		if (tok == null || tok.length() == 0)
 		{
@@ -68,17 +68,17 @@ public final class Compiler
 		return "syntax error (" + String.valueOf(lines) + "):" + tok;
 	}
 	
-	private boolean isAlphabet(int ch)
+	private static boolean isAlphabet(int ch)
 	{
 		return ('A' <= ch && ch <= 'Z') || ('a' <= ch && ch <= 'z');
 	}
 	
-	private boolean isDigit(int ch)
+	private static boolean isDigit(int ch)
 	{
 		return '0' <= ch && ch <= '9';
 	}
 	
-	private boolean isValidLabel(String name)
+	private static boolean isValidLabel(String name)
 	{
 		if (toRegeister(name) >= 0)
 		{
