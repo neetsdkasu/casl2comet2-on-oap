@@ -1,10 +1,10 @@
 MIDlet-1: CASL2, CASL2.png, CASL2MIDlet
 MIDlet-Data-Size: 32768
 MIDlet-Description: CASL2っぽいやつ
-MIDlet-Jar-Size: 27125
+MIDlet-Jar-Size: 31566
 MIDlet-Jar-URL: CASL2.jar
 MIDlet-Name: CASL2
 MIDlet-Vendor: Leonardone
-MIDlet-Version: 1.4
+MIDlet-Version: 1.5
 MicroEdition-Configuration: CLDC-1.1
 MicroEdition-Profile: MIDP-2.0
