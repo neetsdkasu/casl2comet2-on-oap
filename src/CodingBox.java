@@ -5,6 +5,6 @@ public class CodingBox extends TextBox
 {
 	public CodingBox()
 	{
-		super("Coding Space", "", 2000, TextField.ANY);
+		super("Coding Space", "", 5000, TextField.ANY);
 	}
 }
