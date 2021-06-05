@@ -557,7 +557,7 @@ public class CometII
 			}
 			break;
 		case 0x50: op = "SLA: " + Integer.toString(code, 16);
-			adr = getAddr(mIn, code);
+			adr = Math.min(17, calcAddr(mIn, code));
 			switch ((code & 0xF0) >> 4)
 			{
 			case 0x0: adr = GR0 << adr; flag2a(adr & 0x8000, GR0 = (GR0 & 0x8000) | (adr & 0x7FFF)); break;
@@ -572,47 +572,47 @@ public class CometII
 			}
 			break;
 		case 0x51: op = "SRA: " + Integer.toString(code, 16);
-			adr = getAddr(mIn, code);
+			adr = Math.min(17, calcAddr(mIn, code));
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: flag2a((GR0 >> (adr - 1)) & 0x1, GR0 = (((~(0xFFFF >> adr)) * (GR0 >> 15)) | (GR0 >> adr)) & 0xFFFF); break;
-			case 0x1: flag2a((GR1 >> (adr - 1)) & 0x1, GR1 = (((~(0xFFFF >> adr)) * (GR1 >> 15)) | (GR1 >> adr)) & 0xFFFF); break;
-			case 0x2: flag2a((GR2 >> (adr - 1)) & 0x1, GR2 = (((~(0xFFFF >> adr)) * (GR2 >> 15)) | (GR2 >> adr)) & 0xFFFF); break;
-			case 0x3: flag2a((GR3 >> (adr - 1)) & 0x1, GR3 = (((~(0xFFFF >> adr)) * (GR3 >> 15)) | (GR3 >> adr)) & 0xFFFF); break;
-			case 0x4: flag2a((GR4 >> (adr - 1)) & 0x1, GR4 = (((~(0xFFFF >> adr)) * (GR4 >> 15)) | (GR4 >> adr)) & 0xFFFF); break;
-			case 0x5: flag2a((GR5 >> (adr - 1)) & 0x1, GR5 = (((~(0xFFFF >> adr)) * (GR5 >> 15)) | (GR5 >> adr)) & 0xFFFF); break;
-			case 0x6: flag2a((GR6 >> (adr - 1)) & 0x1, GR6 = (((~(0xFFFF >> adr)) * (GR6 >> 15)) | (GR6 >> adr)) & 0xFFFF); break;
-			case 0x7: flag2a((GR7 >> (adr - 1)) & 0x1, GR7 = (((~(0xFFFF >> adr)) * (GR7 >> 15)) | (GR7 >> adr)) & 0xFFFF); break;
+			case 0x0: flag2a(((GR0 << 1) >> adr) & 0x1, GR0 = (((~(0xFFFF >> adr)) * (GR0 >> 15)) | (GR0 >> adr)) & 0xFFFF); break;
+			case 0x1: flag2a(((GR1 << 1) >> adr) & 0x1, GR1 = (((~(0xFFFF >> adr)) * (GR1 >> 15)) | (GR1 >> adr)) & 0xFFFF); break;
+			case 0x2: flag2a(((GR2 << 1) >> adr) & 0x1, GR2 = (((~(0xFFFF >> adr)) * (GR2 >> 15)) | (GR2 >> adr)) & 0xFFFF); break;
+			case 0x3: flag2a(((GR3 << 1) >> adr) & 0x1, GR3 = (((~(0xFFFF >> adr)) * (GR3 >> 15)) | (GR3 >> adr)) & 0xFFFF); break;
+			case 0x4: flag2a(((GR4 << 1) >> adr) & 0x1, GR4 = (((~(0xFFFF >> adr)) * (GR4 >> 15)) | (GR4 >> adr)) & 0xFFFF); break;
+			case 0x5: flag2a(((GR5 << 1) >> adr) & 0x1, GR5 = (((~(0xFFFF >> adr)) * (GR5 >> 15)) | (GR5 >> adr)) & 0xFFFF); break;
+			case 0x6: flag2a(((GR6 << 1) >> adr) & 0x1, GR6 = (((~(0xFFFF >> adr)) * (GR6 >> 15)) | (GR6 >> adr)) & 0xFFFF); break;
+			case 0x7: flag2a(((GR7 << 1) >> adr) & 0x1, GR7 = (((~(0xFFFF >> adr)) * (GR7 >> 15)) | (GR7 >> adr)) & 0xFFFF); break;
 			default: throw new CometIIError(op);
 			}
 			break;
 		case 0x52: op = "SLL: " + Integer.toString(code, 16);
-			adr = getAddr(mIn, code);
+			adr = Math.min(17, calcAddr(mIn, code));
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: flag2l((GR0 << (adr - 1)) & 0x8000, GR0 = (GR0 << adr) & 0xFFFF); break;
-			case 0x1: flag2l((GR1 << (adr - 1)) & 0x8000, GR1 = (GR1 << adr) & 0xFFFF); break;
-			case 0x2: flag2l((GR2 << (adr - 1)) & 0x8000, GR2 = (GR2 << adr) & 0xFFFF); break;
-			case 0x3: flag2l((GR3 << (adr - 1)) & 0x8000, GR3 = (GR3 << adr) & 0xFFFF); break;
-			case 0x4: flag2l((GR4 << (adr - 1)) & 0x8000, GR4 = (GR4 << adr) & 0xFFFF); break;
-			case 0x5: flag2l((GR5 << (adr - 1)) & 0x8000, GR5 = (GR5 << adr) & 0xFFFF); break;
-			case 0x6: flag2l((GR6 << (adr - 1)) & 0x8000, GR6 = (GR6 << adr) & 0xFFFF); break;
-			case 0x7: flag2l((GR7 << (adr - 1)) & 0x8000, GR7 = (GR7 << adr) & 0xFFFF); break;
+			case 0x0: flag2l(((GR0 << adr) >> 1) & 0x8000, GR0 = (GR0 << adr) & 0xFFFF); break;
+			case 0x1: flag2l(((GR1 << adr) >> 1) & 0x8000, GR1 = (GR1 << adr) & 0xFFFF); break;
+			case 0x2: flag2l(((GR2 << adr) >> 1) & 0x8000, GR2 = (GR2 << adr) & 0xFFFF); break;
+			case 0x3: flag2l(((GR3 << adr) >> 1) & 0x8000, GR3 = (GR3 << adr) & 0xFFFF); break;
+			case 0x4: flag2l(((GR4 << adr) >> 1) & 0x8000, GR4 = (GR4 << adr) & 0xFFFF); break;
+			case 0x5: flag2l(((GR5 << adr) >> 1) & 0x8000, GR5 = (GR5 << adr) & 0xFFFF); break;
+			case 0x6: flag2l(((GR6 << adr) >> 1) & 0x8000, GR6 = (GR6 << adr) & 0xFFFF); break;
+			case 0x7: flag2l(((GR7 << adr) >> 1) & 0x8000, GR7 = (GR7 << adr) & 0xFFFF); break;
 			default: throw new CometIIError(op);
 			}
 			break;
 		case 0x53: op = "SRL: " + Integer.toString(code, 16);
-			adr = getAddr(mIn, code);
+			adr = Math.min(17, calcAddr(mIn, code));
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: flag2l((GR0 >> (adr - 1)) & 0x1, GR0 = GR0 >> adr); break;
-			case 0x1: flag2l((GR1 >> (adr - 1)) & 0x1, GR1 = GR1 >> adr); break;
-			case 0x2: flag2l((GR2 >> (adr - 1)) & 0x1, GR2 = GR2 >> adr); break;
-			case 0x3: flag2l((GR3 >> (adr - 1)) & 0x1, GR3 = GR3 >> adr); break;
-			case 0x4: flag2l((GR4 >> (adr - 1)) & 0x1, GR4 = GR4 >> adr); break;
-			case 0x5: flag2l((GR5 >> (adr - 1)) & 0x1, GR5 = GR5 >> adr); break;
-			case 0x6: flag2l((GR6 >> (adr - 1)) & 0x1, GR6 = GR6 >> adr); break;
-			case 0x7: flag2l((GR7 >> (adr - 1)) & 0x1, GR7 = GR7 >> adr); break;
+			case 0x0: flag2l(((GR0 << 1) >> adr) & 0x1, GR0 = GR0 >> adr); break;
+			case 0x1: flag2l(((GR1 << 1) >> adr) & 0x1, GR1 = GR1 >> adr); break;
+			case 0x2: flag2l(((GR2 << 1) >> adr) & 0x1, GR2 = GR2 >> adr); break;
+			case 0x3: flag2l(((GR3 << 1) >> adr) & 0x1, GR3 = GR3 >> adr); break;
+			case 0x4: flag2l(((GR4 << 1) >> adr) & 0x1, GR4 = GR4 >> adr); break;
+			case 0x5: flag2l(((GR5 << 1) >> adr) & 0x1, GR5 = GR5 >> adr); break;
+			case 0x6: flag2l(((GR6 << 1) >> adr) & 0x1, GR6 = GR6 >> adr); break;
+			case 0x7: flag2l(((GR7 << 1) >> adr) & 0x1, GR7 = GR7 >> adr); break;
 			default: throw new CometIIError(op);
 			}
 			break;
