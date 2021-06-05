@@ -94,7 +94,7 @@ public class CometII
 				FR = 0x2;
 			}
 			
-			if (v > 0x7FFF || v < 0)
+			if (v > 0x7FFF || v < -0x8000)
 			{
 				FR |= 0x1;
 			}
@@ -299,28 +299,28 @@ public class CometII
 		case 0x20: op = "ADDA: " + Integer.toString(code, 16);
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: GR0 = flag0a(GR0 + getAddr(mIn, code)); break;
-			case 0x1: GR1 = flag0a(GR1 + getAddr(mIn, code)); break;
-			case 0x2: GR2 = flag0a(GR2 + getAddr(mIn, code)); break;
-			case 0x3: GR3 = flag0a(GR3 + getAddr(mIn, code)); break;
-			case 0x4: GR4 = flag0a(GR4 + getAddr(mIn, code)); break;
-			case 0x5: GR5 = flag0a(GR5 + getAddr(mIn, code)); break;
-			case 0x6: GR6 = flag0a(GR6 + getAddr(mIn, code)); break;
-			case 0x7: GR7 = flag0a(GR7 + getAddr(mIn, code)); break;
+			case 0x0: GR0 = flag0a((int)(short)GR0 + (int)(short)getAddr(mIn, code)); break;
+			case 0x1: GR1 = flag0a((int)(short)GR1 + (int)(short)getAddr(mIn, code)); break;
+			case 0x2: GR2 = flag0a((int)(short)GR2 + (int)(short)getAddr(mIn, code)); break;
+			case 0x3: GR3 = flag0a((int)(short)GR3 + (int)(short)getAddr(mIn, code)); break;
+			case 0x4: GR4 = flag0a((int)(short)GR4 + (int)(short)getAddr(mIn, code)); break;
+			case 0x5: GR5 = flag0a((int)(short)GR5 + (int)(short)getAddr(mIn, code)); break;
+			case 0x6: GR6 = flag0a((int)(short)GR6 + (int)(short)getAddr(mIn, code)); break;
+			case 0x7: GR7 = flag0a((int)(short)GR7 + (int)(short)getAddr(mIn, code)); break;
 			default: throw new CometIIError(op);
 			}
 			break;
 		case 0x21: op = "SUBA: " + Integer.toString(code, 16);
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: GR0 = flag0a(GR0 - getAddr(mIn, code)); break;
-			case 0x1: GR1 = flag0a(GR1 - getAddr(mIn, code)); break;
-			case 0x2: GR2 = flag0a(GR2 - getAddr(mIn, code)); break;
-			case 0x3: GR3 = flag0a(GR3 - getAddr(mIn, code)); break;
-			case 0x4: GR4 = flag0a(GR4 - getAddr(mIn, code)); break;
-			case 0x5: GR5 = flag0a(GR5 - getAddr(mIn, code)); break;
-			case 0x6: GR6 = flag0a(GR6 - getAddr(mIn, code)); break;
-			case 0x7: GR7 = flag0a(GR7 - getAddr(mIn, code)); break;
+			case 0x0: GR0 = flag0a((int)(short)GR0 - (int)(short)getAddr(mIn, code)); break;
+			case 0x1: GR1 = flag0a((int)(short)GR1 - (int)(short)getAddr(mIn, code)); break;
+			case 0x2: GR2 = flag0a((int)(short)GR2 - (int)(short)getAddr(mIn, code)); break;
+			case 0x3: GR3 = flag0a((int)(short)GR3 - (int)(short)getAddr(mIn, code)); break;
+			case 0x4: GR4 = flag0a((int)(short)GR4 - (int)(short)getAddr(mIn, code)); break;
+			case 0x5: GR5 = flag0a((int)(short)GR5 - (int)(short)getAddr(mIn, code)); break;
+			case 0x6: GR6 = flag0a((int)(short)GR6 - (int)(short)getAddr(mIn, code)); break;
+			case 0x7: GR7 = flag0a((int)(short)GR7 - (int)(short)getAddr(mIn, code)); break;
 			default: throw new CometIIError(op);
 			}
 			break;
@@ -355,28 +355,28 @@ public class CometII
 		case 0x24: op = "ADDA: " + Integer.toString(code, 16);
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: GR0 = flag0a(GR0 + getReg(code)); break;
-			case 0x1: GR1 = flag0a(GR1 + getReg(code)); break;
-			case 0x2: GR2 = flag0a(GR2 + getReg(code)); break;
-			case 0x3: GR3 = flag0a(GR3 + getReg(code)); break;
-			case 0x4: GR4 = flag0a(GR4 + getReg(code)); break;
-			case 0x5: GR5 = flag0a(GR5 + getReg(code)); break;
-			case 0x6: GR6 = flag0a(GR6 + getReg(code)); break;
-			case 0x7: GR7 = flag0a(GR7 + getReg(code)); break;
+			case 0x0: GR0 = flag0a((int)(short)GR0 + (int)(short)getReg(code)); break;
+			case 0x1: GR1 = flag0a((int)(short)GR1 + (int)(short)getReg(code)); break;
+			case 0x2: GR2 = flag0a((int)(short)GR2 + (int)(short)getReg(code)); break;
+			case 0x3: GR3 = flag0a((int)(short)GR3 + (int)(short)getReg(code)); break;
+			case 0x4: GR4 = flag0a((int)(short)GR4 + (int)(short)getReg(code)); break;
+			case 0x5: GR5 = flag0a((int)(short)GR5 + (int)(short)getReg(code)); break;
+			case 0x6: GR6 = flag0a((int)(short)GR6 + (int)(short)getReg(code)); break;
+			case 0x7: GR7 = flag0a((int)(short)GR7 + (int)(short)getReg(code)); break;
 			default: throw new CometIIError(op);
 			}
 			break;
 		case 0x25: op = "SUBA: " + Integer.toString(code, 16);
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: GR0 = flag0a(GR0 - getReg(code)); break;
-			case 0x1: GR1 = flag0a(GR1 - getReg(code)); break;
-			case 0x2: GR2 = flag0a(GR2 - getReg(code)); break;
-			case 0x3: GR3 = flag0a(GR3 - getReg(code)); break;
-			case 0x4: GR4 = flag0a(GR4 - getReg(code)); break;
-			case 0x5: GR5 = flag0a(GR5 - getReg(code)); break;
-			case 0x6: GR6 = flag0a(GR6 - getReg(code)); break;
-			case 0x7: GR7 = flag0a(GR7 - getReg(code)); break;
+			case 0x0: GR0 = flag0a((int)(short)GR0 - (int)(short)getReg(code)); break;
+			case 0x1: GR1 = flag0a((int)(short)GR1 - (int)(short)getReg(code)); break;
+			case 0x2: GR2 = flag0a((int)(short)GR2 - (int)(short)getReg(code)); break;
+			case 0x3: GR3 = flag0a((int)(short)GR3 - (int)(short)getReg(code)); break;
+			case 0x4: GR4 = flag0a((int)(short)GR4 - (int)(short)getReg(code)); break;
+			case 0x5: GR5 = flag0a((int)(short)GR5 - (int)(short)getReg(code)); break;
+			case 0x6: GR6 = flag0a((int)(short)GR6 - (int)(short)getReg(code)); break;
+			case 0x7: GR7 = flag0a((int)(short)GR7 - (int)(short)getReg(code)); break;
 			default: throw new CometIIError(op);
 			}
 			break;
@@ -495,14 +495,14 @@ public class CometII
 		case 0x40: op = "CPA: " + Integer.toString(code, 16);
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: flag0a(GR0 - getAddr(mIn, code)); break;
-			case 0x1: flag0a(GR1 - getAddr(mIn, code)); break;
-			case 0x2: flag0a(GR2 - getAddr(mIn, code)); break;
-			case 0x3: flag0a(GR3 - getAddr(mIn, code)); break;
-			case 0x4: flag0a(GR4 - getAddr(mIn, code)); break;
-			case 0x5: flag0a(GR5 - getAddr(mIn, code)); break;
-			case 0x6: flag0a(GR6 - getAddr(mIn, code)); break;
-			case 0x7: flag0a(GR7 - getAddr(mIn, code)); break;
+			case 0x0: flag0a((int)(short)GR0 - (int)(short)getAddr(mIn, code)); break;
+			case 0x1: flag0a((int)(short)GR1 - (int)(short)getAddr(mIn, code)); break;
+			case 0x2: flag0a((int)(short)GR2 - (int)(short)getAddr(mIn, code)); break;
+			case 0x3: flag0a((int)(short)GR3 - (int)(short)getAddr(mIn, code)); break;
+			case 0x4: flag0a((int)(short)GR4 - (int)(short)getAddr(mIn, code)); break;
+			case 0x5: flag0a((int)(short)GR5 - (int)(short)getAddr(mIn, code)); break;
+			case 0x6: flag0a((int)(short)GR6 - (int)(short)getAddr(mIn, code)); break;
+			case 0x7: flag0a((int)(short)GR7 - (int)(short)getAddr(mIn, code)); break;
 			default: throw new CometIIError(op);
 			}
 			break;
@@ -523,14 +523,14 @@ public class CometII
 		case 0x44: op = "CPA: " + Integer.toString(code, 16);
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: flag0a(GR0 - getReg(code)); break;
-			case 0x1: flag0a(GR1 - getReg(code)); break;
-			case 0x2: flag0a(GR2 - getReg(code)); break;
-			case 0x3: flag0a(GR3 - getReg(code)); break;
-			case 0x4: flag0a(GR4 - getReg(code)); break;
-			case 0x5: flag0a(GR5 - getReg(code)); break;
-			case 0x6: flag0a(GR6 - getReg(code)); break;
-			case 0x7: flag0a(GR7 - getReg(code)); break;
+			case 0x0: flag0a((int)(short)GR0 - (int)(short)getReg(code)); break;
+			case 0x1: flag0a((int)(short)GR1 - (int)(short)getReg(code)); break;
+			case 0x2: flag0a((int)(short)GR2 - (int)(short)getReg(code)); break;
+			case 0x3: flag0a((int)(short)GR3 - (int)(short)getReg(code)); break;
+			case 0x4: flag0a((int)(short)GR4 - (int)(short)getReg(code)); break;
+			case 0x5: flag0a((int)(short)GR5 - (int)(short)getReg(code)); break;
+			case 0x6: flag0a((int)(short)GR6 - (int)(short)getReg(code)); break;
+			case 0x7: flag0a((int)(short)GR7 - (int)(short)getReg(code)); break;
 			default: throw new CometIIError(op);
 			}
 			break;
