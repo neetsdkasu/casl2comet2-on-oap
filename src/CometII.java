@@ -175,7 +175,7 @@ public class CometII
 	
 	private int calcAddr(Memory in, int code)
 	{
-		int adr = in.readShort(); PR++;
+		int adr = 0xFFFF & in.readShort(); PR++;
 		switch (code & 0xF)
 		{
 		case 0x0: break;
@@ -188,6 +188,7 @@ public class CometII
 		case 0x7: adr += GR7; break;
 		default: throw new CometIIError(op);
 		}
+		adr &= 0xFFFF;
 		op += ", addr: " + adr;
 		return adr;
 	}
@@ -197,7 +198,7 @@ public class CometII
 	{
 		int adr = calcAddr(in, code);
 		memory.setPos((adr) << 1);
-		adr = in.readShort();
+		adr = 0xFFFF & in.readShort();
 		memory.setPos(PR << 1);
 		op += ", val: " + adr;
 		return adr;
@@ -231,7 +232,7 @@ public class CometII
 		{
 			throw new CometIIError("no program");
 		}
-		int code = 0xFFFF & (int)mIn.readShort(); PR++;
+		int code = 0xFFFF & mIn.readShort(); PR++;
 		int adr;
 		switch (code >> 8)
 		{
@@ -666,14 +667,14 @@ public class CometII
 			memory.setPos(SP << 1);
 			switch ((code & 0xF0) >> 4)
 			{
-			case 0x0: GR0 = mIn.readShort(); break;
-			case 0x1: GR1 = mIn.readShort(); break;
-			case 0x2: GR2 = mIn.readShort(); break;
-			case 0x3: GR3 = mIn.readShort(); break;
-			case 0x4: GR4 = mIn.readShort(); break;
-			case 0x5: GR5 = mIn.readShort(); break;
-			case 0x6: GR6 = mIn.readShort(); break;
-			case 0x7: GR7 = mIn.readShort(); break;
+			case 0x0: GR0 = 0xFFFF & mIn.readShort(); break;
+			case 0x1: GR1 = 0xFFFF & mIn.readShort(); break;
+			case 0x2: GR2 = 0xFFFF & mIn.readShort(); break;
+			case 0x3: GR3 = 0xFFFF & mIn.readShort(); break;
+			case 0x4: GR4 = 0xFFFF & mIn.readShort(); break;
+			case 0x5: GR5 = 0xFFFF & mIn.readShort(); break;
+			case 0x6: GR6 = 0xFFFF & mIn.readShort(); break;
+			case 0x7: GR7 = 0xFFFF & mIn.readShort(); break;
 			default: throw new CometIIError(op);
 			}
 			SP++;
@@ -693,7 +694,7 @@ public class CometII
 				throw new CometIIError("Stack is already head!");
 			}
 			memory.setPos(SP << 1);
-			PR = mIn.readShort();
+			PR = 0xFFFF & mIn.readShort();
 			SP++;
 			memory.setPos(PR << 1);
 			break;
@@ -791,7 +792,7 @@ public class CometII
 				{
 					// simulate OS program
 					memory.setPos(GR2 << 1);
-					int len = mIn.readShort();
+					int len = 0xFFFF & mIn.readShort();
 					int bsize = 0;
 					memory.setPos(GR1 << 1);
 					{
@@ -823,7 +824,7 @@ public class CometII
 						{
 							if (bsize < len) 
 							{
-								int dt = mIn.readShort();
+								int dt = 0xFFFF & mIn.readShort();
 								stdout.putData(dt);
 								bsize++;
 								stdout.setState(Device.STATE_PREPARE);
