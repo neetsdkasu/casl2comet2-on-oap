@@ -177,6 +177,25 @@ public final class Compiler
 			}
 		}
 	}
+	
+	int parseString(String src, int pos)
+	{
+		boolean quote = false;
+		while (pos < src.length())
+		{
+			int ch = src.charAt(pos);
+			if (ch == '\'')
+			{
+				quote = !quote;
+			}
+			else if (quote || ch == '\n' || ch == '\r')
+			{
+				break;
+			}
+			pos++;
+		}
+		return pos;
+	}
 
 	public int addSource(String pgName, String src)
 	{
@@ -290,6 +309,14 @@ public final class Compiler
 					while (j < src.length() && ";, \r\n".indexOf(src.charAt(j)) < 0)
 					{
 						j++;
+					}
+					if (src.charAt(i) == '\'')
+					{
+						j = parseString(src, i + 1);
+					}
+					else if (j - i >= 2 && src.charAt(i) == '=' && src.charAt(i + 1) == '\'')
+					{
+						j = parseString(src, i + 2);
 					}
 					String tk = src.substring(i, j);
 					if (tk.length() < 2 || (tk.charAt(0) != '\'' && tk.charAt(0) != '=' && tk.charAt(1) != '\''))

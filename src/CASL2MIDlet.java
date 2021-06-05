@@ -16,13 +16,16 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 {
 	public static String lastError = "nothing";
 
-	private Thread mainloop = null;
+	private Thread mainloop = null, downloading = null;
+	
+	private Alert waitDownload = null;
 
 	private CASL2Canvas mainDisp  = null;
 	private CodingBox   codingBox = null;
 	private RMSForm     fileMgr   = null;
 	private InputBox    inputBox  = null;
 	private Form        helpView  = null;
+	private DownloadForm download = null;
 
 	private Command exitCommand     = null;
 	private Command helpCommand     = null;
@@ -38,6 +41,9 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 	private Command breakCommand    = null;
 	private Command errorCommand    = null;
 	private Command closeHelpCommand= null;
+	private Command httpCommand       = null;
+	private Command httpGetCommand    = null;
+	private Command httpCancelCommand = null;
 
 	private boolean existFile = false;
 
@@ -54,6 +60,7 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		fileMgr   = new RMSForm();
 		inputBox  = new InputBox();
 		helpView  = new Form("Help");
+		download = new DownloadForm(fileMgr);
 
 		mainDisp.setLoader(fileMgr);
 
@@ -75,10 +82,13 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		codingCommand = new Command("CODING", Command.SCREEN, 5);
 		mainDisp.addCommand(codingCommand);
 
-		errorCommand = new Command("ERROR", Command.SCREEN, 6);
+		httpCommand = new Command("HTTP", Command.SCREEN, 6);
+		mainDisp.addCommand(httpCommand);
+
+		errorCommand = new Command("ERROR", Command.SCREEN, 7);
 		mainDisp.addCommand(errorCommand);
 
-		helpCommand = new Command("HELP", Command.SCREEN, 7);
+		helpCommand = new Command("HELP", Command.SCREEN, 8);
 		mainDisp.addCommand(helpCommand);
 
 		closeCommand = new Command("CLOSE", Command.SCREEN, 1);
@@ -99,11 +109,18 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		closeHelpCommand = new Command("CLOSE", Command.SCREEN, 1);
 		helpView.addCommand(closeHelpCommand);
 
+		httpGetCommand = new Command("GET", Command.OK, 1);
+		download.addCommand(httpGetCommand);
+
+		httpCancelCommand = new Command("CANCEL", Command.CANCEL, 2);
+		download.addCommand(httpCancelCommand);
+
 		mainDisp.setCommandListener(this);
 		codingBox.setCommandListener(this);
 		fileMgr.setCommandListener(this);
 		inputBox.setCommandListener(this);
 		helpView.setCommandListener(this);
+		download.setCommandListener(this);
 
 		loadHelpText();
 
@@ -219,7 +236,9 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		else if (cmd == closeCommand)
 		{
 			String src = codingBox.getString();
-			existFile = fileMgr.saveSrc(src);
+			int sizeAvailable = fileMgr.saveSrc(src);
+			existFile = sizeAvailable >= 0;
+			mainDisp.requestInfo("size available: " + sizeAvailable + " bytes", 0xFFFF00);
 			Display.getDisplay(this).setCurrent(mainDisp);
 		}
 		else if (cmd == cancelCommand)
@@ -230,6 +249,11 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		{
 			if (!fileMgr.isValid())
 			{
+				return;
+			}
+			if (fileMgr.selectedDelete())
+			{
+				fileMgr.doDelete();
 				return;
 			}
 			String src = fileMgr.getSrc();
@@ -273,6 +297,65 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 		else if (cmd == closeHelpCommand)
 		{
 			Display.getDisplay(this).setCurrent(mainDisp);
+		}
+		else if (cmd == httpCommand)
+		{
+			Display.getDisplay(this).setCurrent(download);
+		}
+		else if (cmd == httpCancelCommand)
+		{
+			Display.getDisplay(this).setCurrent(mainDisp);
+		}
+		else if (cmd == httpGetCommand)
+		{
+			if (!download.isValid())
+			{
+				return;
+			}
+			downloading = new Thread(download);
+			downloading.start();
+			waitDownload = new Alert("download", "downloading...", null, null);
+			waitDownload.setTimeout(Alert.FOREVER);
+			Display.getDisplay(this).setCurrent(waitDownload);
+			(new Thread(new Runnable(){
+				public void run() {
+					if (downloading != null)
+					{
+						try { downloading.join(); }
+						catch (Exception ex) {}
+					}
+					commandAction(Alert.DISMISS_COMMAND, waitDownload);
+				}
+			})).start();
+		}
+		else if (cmd == Alert.DISMISS_COMMAND)
+		{
+			if (disp != null && disp == waitDownload)
+			{
+				if (downloading != null)
+				{
+					if (downloading.isAlive())
+					{
+						return;
+					}
+					downloading = null;
+				}
+				waitDownload = null;
+				String file = download.getName();
+				int result = download.getResult();
+				if (result >= 0)
+				{
+					mainDisp.requestInfo("success download file: " + file, 0xFFFF00);
+					try { Thread.sleep(100L); }
+					catch (Exception ex) {}
+					mainDisp.requestInfo("size available: " + result + " bytes", 0xFFFF00);
+				}
+				else
+				{
+					mainDisp.requestInfo("failure download file: " + file, 0xFF0000);
+				}
+				Display.getDisplay(this).setCurrent(mainDisp);
+			}
 		}
 	}
 
