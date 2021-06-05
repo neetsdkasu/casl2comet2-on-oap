@@ -9,7 +9,7 @@ public class RMSForm extends Form implements Compiler.Loader
 {
 	Ticker info = null;
 	ChoiceGroup saveType;
-	TextField saveName;
+	TextField saveName, deleteName;
 	ChoiceGroup fileList;
 	RecordStore curRS = null;
 	String fileName = null;
@@ -35,11 +35,15 @@ public class RMSForm extends Form implements Compiler.Loader
 		saveType = new ChoiceGroup("save type:", ChoiceGroup.EXCLUSIVE);
 		saveType.append("NEW", null);
 		saveType.append("LOAD", null);
+		saveType.append("DELETE", null);
 		saveType.setSelectedIndex(0, true);
 		append(saveType);
 
 		saveName = new TextField("new file:", "", 8, TextField.ANY);
 		append(saveName);
+
+		deleteName = new TextField("delete file:", "", 8, TextField.ANY);
+		append(deleteName);
 
 		fileList = new ChoiceGroup("load files:", ChoiceGroup.EXCLUSIVE);
 		String[] list = RecordStore.listRecordStores();
@@ -125,7 +129,7 @@ public class RMSForm extends Form implements Compiler.Loader
 			fileName = file;
 			isNewFile = true;
 		}
-		else
+		else if (saveType.getSelectedIndex() == 1) // LOAD
 		{
 			if (fileList.size() == 0)
 			{
@@ -141,19 +145,50 @@ public class RMSForm extends Form implements Compiler.Loader
 			fileName = fileList.getString(idx);
 			isNewFile = false;
 		}
+		else if (saveType.getSelectedIndex() == 2) // DELETE
+		{
+			String file = deleteName.getString();
+			if (file == null)
+			{
+				showInfo("need file name");
+				return false;
+			}
+			fileName = null;
+			for (int i = 0; i < fileList.size(); i++)
+			{
+				if (file.equals(fileList.getString(i)))
+				{
+					fileName = file;
+					break;
+				}
+			}
+			if (fileName == null)
+			{
+				showInfo("not found file name");
+				return false;
+			}
+			isNewFile = false;
+		}
 		setTicker(null);
 		return true;
 	}
-
-	public boolean saveSrc(String src)
+	
+	public boolean selectedDelete()
 	{
-		if (curRS == null)
+		return saveType.getSelectedIndex() == 2;
+	}
+	
+	public boolean doDelete()
+	{
+		if (fileName == null)
 		{
+			showInfo("fileName is null");
 			return false;
 		}
-		if (src == null || src.length() == 0)
+		saveType.setSelectedIndex(0, true);
+		String rsName = "casl2." + fileName;
+		if (curRS != null)
 		{
-			String rsName = "casl2." + fileName;
 			try
 			{
 				curRS.closeRecordStore();
@@ -163,22 +198,37 @@ public class RMSForm extends Form implements Compiler.Loader
 				// no code
 			}
 			curRS = null;
-			try
+		}
+		try
+		{
+			RecordStore.deleteRecordStore(rsName);
+		}
+		catch (RecordStoreException __)
+		{
+			// no code
+		}
+		for (int i = 0; i < fileList.size(); i++)
+		{
+			if (fileName.equals(fileList.getString(i)))
 			{
-				RecordStore.deleteRecordStore(rsName);
+				fileList.delete(i);
+				break;
 			}
-			catch (RecordStoreException __)
-			{
-				// no code
-			}
-			for (int i = 0; i < fileList.size(); i++)
-			{
-				if (fileName.equals(fileList.getString(i)))
-				{
-					fileList.delete(i);
-					break;
-				}
-			}
+		}
+		showInfo("deleted " + fileName);
+		fileName = null;
+		deleteName.setString(null);
+		return true;
+	}
+
+	public boolean saveSrc(String src)
+	{
+		if (curRS == null)
+		{
+			return false;
+		}
+		if (src == null)
+		{
 			return false;
 		}
 		try

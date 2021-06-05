@@ -232,6 +232,11 @@ public final class CASL2MIDlet extends MIDlet implements CommandListener, Caller
 			{
 				return;
 			}
+			if (fileMgr.selectedDelete())
+			{
+				fileMgr.doDelete();
+				return;
+			}
 			String src = fileMgr.getSrc();
 			String file = fileMgr.getFileName();
 			if (src == null)
