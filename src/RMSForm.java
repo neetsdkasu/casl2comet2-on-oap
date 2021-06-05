@@ -86,6 +86,41 @@ public class RMSForm extends Form implements Compiler.Loader
 	{
 		return fileName;
 	}
+	
+	public String validateName(String file)
+	{
+		if (file == null || file.length() == 0 || file.length() > 8)
+		{
+			return "wrong file name (len=1-8)";
+		}
+		file = file.toUpperCase();
+		int head = file.charAt(0);
+		if (head < 'A'|| 'Z' < head)
+		{
+			return "wrong file name (head=A-Z)";
+		}
+		for (int i = 0; i < file.length(); i++)
+		{
+			int ch = file.charAt(i);
+			if ('A' <= ch && ch <= 'Z')
+			{
+				continue;
+			}
+			if ('0' <= ch && ch <= '9')
+			{
+				continue;
+			}
+			return "wrong file name (char=A-Z0-9)";
+		}
+		for (int i = 0; i < fileList.size(); i++)
+		{
+			if (file.equals(fileList.getString(i)))
+			{
+				return "wrong file name (already exists)";
+			}
+		}
+		return null;
+	}
 
 	public boolean isValid()
 	{
@@ -220,16 +255,48 @@ public class RMSForm extends Form implements Compiler.Loader
 		deleteName.setString(null);
 		return true;
 	}
+	
+	public int saveSrc(String name, byte[] src)
+	{
+		if (name == null || src == null)
+		{
+			return -1;
+		}
+		String rsName = "casl2." + name;
+		RecordStore rs = null;
+		try
+		{
+			rs = RecordStore.openRecordStore(rsName, true);
+			rs.addRecord(src, 0, src.length);
+			fileList.append(name, null);
+			int size = rs.getSizeAvailable();
+			return size;
+		}
+		catch (RecordStoreException ex)
+		{
+			CASL2MIDlet.lastError = ex.toString();
+			return -1;
+		}		
+		finally
+		{
+			if (rs != null)
+			{
+				try { rs.closeRecordStore(); }
+				catch (Exception ex) {}
+				rs = null;
+			}
+		}
+	}
 
-	public boolean saveSrc(String src)
+	public int saveSrc(String src)
 	{
 		if (curRS == null)
 		{
-			return false;
+			return -1;
 		}
 		if (src == null)
 		{
-			return false;
+			return -1;
 		}
 		try
 		{
@@ -242,7 +309,7 @@ public class RMSForm extends Form implements Compiler.Loader
 			{
 				curRS.setRecord(1, buf, 0, buf.length);
 			}
-			return true;
+			return curRS.getSizeAvailable();
 		}
 		catch (RecordStoreException ex)
 		{
@@ -256,7 +323,7 @@ public class RMSForm extends Form implements Compiler.Loader
 				// no code
 			}
 			curRS = null;
-			return false;
+			return -1;
 		}
 	}
 
