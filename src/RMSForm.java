@@ -1,26 +1,36 @@
 import javax.microedition.lcdui.ChoiceGroup;
 import javax.microedition.lcdui.Form;
-import javax.microedition.lcdui.StringItem;
+import javax.microedition.lcdui.Ticker;
 import javax.microedition.lcdui.TextField;
 import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException ;
 
 public class RMSForm extends Form implements Compiler.Loader
 {
-	StringItem info;
+	Ticker info = null;
 	ChoiceGroup saveType;
 	TextField saveName;
 	ChoiceGroup fileList;
 	RecordStore curRS = null;
 	String fileName = null;
 	boolean isNewFile = false;
+	
+	void showInfo(String msg)
+	{
+		if (info == null)
+		{
+			info = new Ticker(msg);
+		}
+		else
+		{
+			info.setString(msg);
+		}
+		setTicker(info);
+	}
 
 	public RMSForm()
 	{
 		super("Files");
-
-		info = new StringItem(null, null);
-		append(info);
 
 		saveType = new ChoiceGroup("save type:", ChoiceGroup.EXCLUSIVE);
 		saveType.append("NEW", null);
@@ -48,7 +58,7 @@ public class RMSForm extends Form implements Compiler.Loader
 
 	public void clearFields()
 	{
-		info.setText(null);
+		setTicker(null);
 	}
 
 	public void close()
@@ -80,14 +90,14 @@ public class RMSForm extends Form implements Compiler.Loader
 			String file = saveName.getString();
 			if (file == null || file.length() == 0 || file.length() > 8)
 			{
-				info.setText("wrong file name (len=1-8)");
+				showInfo("wrong file name (len=1-8)");
 				return false;
 			}
 			file = file.toUpperCase();
 			int head = file.charAt(0);
 			if (head < 'A'|| 'Z' < head)
 			{
-				info.setText("wrong file name (head=A-Z)");
+				showInfo("wrong file name (head=A-Z)");
 				return false;
 			}
 			for (int i = 0; i < file.length(); i++)
@@ -101,14 +111,14 @@ public class RMSForm extends Form implements Compiler.Loader
 				{
 					continue;
 				}
-				info.setText("wrong file name (char=A-Z0-9)");
+				showInfo("wrong file name (char=A-Z0-9)");
 				return false;
 			}
 			for (int i = 0; i < fileList.size(); i++)
 			{
 				if (file.equals(fileList.getString(i)))
 				{
-					info.setText("wrong file name (duplicate)");
+					showInfo("wrong file name (duplicate)");
 					return false;
 				}
 			}
@@ -119,19 +129,19 @@ public class RMSForm extends Form implements Compiler.Loader
 		{
 			if (fileList.size() == 0)
 			{
-				info.setText("no file");
+				showInfo("no file");
 				return false;
 			}
 			int idx = fileList.getSelectedIndex();
 			if (idx < 0)
 			{
-				info.setText("no selected");
+				showInfo("no selected");
 				return false;
 			}
 			fileName = fileList.getString(idx);
 			isNewFile = false;
 		}
-		info.setText(null);
+		setTicker(null);
 		return true;
 	}
 
