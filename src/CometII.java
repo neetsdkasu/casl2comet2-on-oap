@@ -116,6 +116,10 @@ public class CometII
 		{
 			FR = 0x0;
 		}
+		if ((v & 0x8000) != 0)
+		{
+			FR |= 0x2;
+		}
 		return v & 0xFFFF;
 	}
 	
@@ -162,9 +166,13 @@ public class CometII
 		{
 			FR = 0x4;
 		}
+		else if ((v & 0x8000) == 0)
+		{
+			FR = 0;
+		}
 		else
 		{
-			FR = 0x0;
+			FR = 0x2;
 		}
 		
 		if (ca != 0)
